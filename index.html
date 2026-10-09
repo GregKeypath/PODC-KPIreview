@@ -234,7 +234,7 @@ let week = mondayOf(new Date());
 const timers = {};
 const openC = new Set();
 const drafts = {};
-let focusNext = null;
+let focusNext = null, liveTimer = null;
 let me = '';
 try{ me = localStorage.getItem('podc_me') || ''; }catch(e){}
 
@@ -429,6 +429,7 @@ function bind(sec){
     const ev = (el.tagName === 'TEXTAREA' || el.type === 'number' || el.type === 'text') ? 'input' : 'change';
     el.addEventListener(ev, () => onEdit(k, el));
     if(el.type === 'number' || el.type === 'text') el.addEventListener('change', () => render());
+    if(el.type === 'number') el.addEventListener('input', () => { clearTimeout(liveTimer); liveTimer = setTimeout(render, 350); });
     if(el.tagName === 'TEXTAREA'){ fit(el); el.addEventListener('input', () => fit(el)); }
   });
   sec.querySelectorAll('[data-toggle]').forEach(b => b.onclick = () => { const k = b.dataset.toggle; openC.has(k) ? openC.delete(k) : openC.add(k); if(openC.has(k)) focusNext = {k, f:'cdraft'}; render(); });
