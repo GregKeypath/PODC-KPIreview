@@ -51,7 +51,7 @@ h1{font-size:28px;font-weight:700;letter-spacing:-.02em;margin:0;text-wrap:balan
 .ov{background:var(--panel);border-radius:16px;padding:18px 20px;display:grid;gap:14px;box-shadow:var(--shadow);border-top:5px solid var(--pc)}
 .ov h2{margin:0;font-size:16px;font-weight:600;display:flex;align-items:center;gap:10px}
 .ov h2 span{font-weight:400;color:var(--muted);font-size:13px}
-.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .stat{background:var(--sb);border-radius:12px;padding:10px 12px}
 .stat .n{font-family:var(--mono);font-size:24px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--sc)}
 .stat .l{font-size:12px;color:var(--muted)}
@@ -109,11 +109,14 @@ select:hover{background:var(--fieldhover)}
 .planbox input{width:16px;height:16px;accent-color:var(--flag);cursor:pointer}
 .planbox:has(input:checked){color:var(--flag);font-weight:600}
 
-.detailgrid{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:start}
+.detailgrid{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:10px;align-items:start}
 textarea{width:100%;min-height:34px;resize:none;overflow:hidden;background:var(--field);border:1px solid transparent;border-radius:8px;padding:7px 10px;color:var(--ink);line-height:1.45}
 textarea::placeholder,input.txt::placeholder{color:var(--faint)}
 textarea:hover{background:var(--fieldhover)}
 textarea:focus{background:var(--panel);border-color:var(--focus);outline:none}
+.clearbox{display:inline-flex;align-items:center;gap:6px;background:var(--watch-bg);color:var(--watch);border-radius:8px;padding:4px 12px;min-height:34px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.clearbox input{width:16px;height:16px;accent-color:var(--ok);cursor:pointer}
+.clearbox.on{background:var(--ok-bg);color:var(--ok)}
 .ovbox{display:flex;align-items:center;gap:8px;background:var(--field);border-radius:8px;padding:4px 6px 4px 10px;min-height:34px}
 .ovbox.on{background:var(--ovr-bg)}
 .ovbox.off{opacity:.55}
@@ -185,7 +188,7 @@ input.txt.need{border-color:var(--ovr);box-shadow:0 0 0 3px var(--ovr-bg)}
   </section>
 
   <section id="ovsec" hidden>
-    <p class="sectitle" style="--st:var(--ovr)">Override applied</p>
+    <p class="sectitle" style="--st:var(--ovr)">Overrides this week</p>
     <div class="alerts" id="overrides"></div>
   </section>
 
@@ -194,7 +197,7 @@ input.txt.need{border-color:var(--ovr);box-shadow:0 0 0 3px var(--ovr-bg)}
   <div class="legend">
     <span><i class="sw" style="background:var(--flag)"></i>Flag: an FY27 KPI is in Support Needed</span>
     <span><i class="sw" style="background:var(--watch)"></i>Watch: call attempts or vCITA below the minimum for days worked</span>
-    <span><i class="sw" style="background:var(--ovr)"></i>Overridden: a reason has been accepted</span>
+    <span><i class="sw" style="background:var(--watch)"></i>Overridden Flag: drops to Watch and carries forward each week until Clear watch is ticked</span>
     <span><i class="sw" style="background:var(--ok)"></i>On track, Achieved Expectations</span>
     <span><i class="sw" style="background:var(--exc)"></i>Exceptional Performance</span>
   </div>
@@ -328,11 +331,35 @@ function hasData(r){ return ['days','attempts','vcita','unique','att','con','t12
 
 function tier(k, v){ if(v === null) return ''; const t = KPI[k]; return v < t.floor ? 'flag' : v > t.ceil ? 'exc' : 'ok'; }
 
-function assess(r){
+function stepped(r, base){ return base === 'flag' && !!r.override && !!String(r.ovReason || '').trim(); }
+
+function carryFrom(a, wk){
+  const k = key(a.name);
+  let src = null;
+  Object.keys(all).filter(w => w < wk).sort().forEach(w => {
+    const r = (all[w] || {})[k] || {};
+    if(stepped(r, baseOf(r).base)) src = {wk:w, reason:r.ovReason, by:r.ovBy};
+    if(r.clearWatch) src = null;
+  });
+  return src;
+}
+
+function assess(r, a, wk){
+  const res = baseOf(r);
+  res.status = res.base;
+  res.stepdown = stepped(r, res.base);
+  if(res.stepdown) res.status = 'watch';
+  res.carryRaw = a && wk ? carryFrom(a, wk) : null;
+  res.carried = res.carryRaw && !r.clearWatch ? res.carryRaw : null;
+  if(res.carried && res.status !== 'flag') res.status = 'watch';
+  return res;
+}
+
+function baseOf(r){
   const reasons = {flag:[], watch:[]};
-  if(!hasData(r)) return {status:'none', base:'none', reasons};
+  if(!hasData(r)) return {base:'none', reasons};
   const days = num(r.days);
-  if(days === 0) return {status:'leave', base:'leave', reasons};
+  if(days === 0) return {base:'leave', reasons};
   ['att','con','t12'].forEach(k => { const v = num(r[k]); if(v !== null && v < KPI[k].floor) reasons.flag.push(`${KPI[k].label} ${v}% (below ${KPI[k].floor}%)`); });
   if(r.cq === 'Support Needed') reasons.flag.push('Call Quality rated Support Needed');
   if(days !== null){
@@ -342,21 +369,20 @@ function assess(r){
   }
   const missing = days === null || num(r.attempts) === null || num(r.vcita) === null;
   const base = reasons.flag.length ? 'flag' : reasons.watch.length ? 'watch' : missing ? 'part' : 'ok';
-  const below = base === 'flag' || base === 'watch';
-  const status = below && r.override && String(r.ovReason || '').trim() ? 'override' : base;
-  return {status, base, reasons};
+  return {base, reasons};
 }
 
 function streak(a){
   let n = 0, d = new Date(week);
   while(true){
-    const s = assess(rec(iso(d), a)).status;
+    const s = assess(rec(iso(d), a), a, iso(d)).status;
     if(s === 'flag' || s === 'watch'){ n++; d = addDays(d, -7); } else break;
   }
   return n;
 }
 
-const LABEL = {flag:'Flag', watch:'Watch', ok:'On track', override:'Overridden', part:'Incomplete', none:'No data', leave:'On leave'};
+const LABEL = {flag:'Flag', watch:'Watch', ok:'On track', part:'Incomplete', none:'No data', leave:'On leave'};
+const wkDate = w => { const [y, m, d] = w.split('-').map(Number); return fmt(new Date(y, m-1, d)); };
 
 const COLS = `<colgroup><col class="c-name"><col class="c-days"><col class="c-calls"><col class="c-calls"><col class="c-uniq"><col class="c-kpi"><col class="c-kpi"><col class="c-kpi"><col class="c-cq"><col class="c-st"><col class="c-plan"></colgroup>`;
 const HEAD = `<thead><tr>
@@ -382,8 +408,8 @@ function rowHtml(a, k, r, res, st, wk){
   const kcls = f => { const t = tier(f, num(r[f])); return t ? 't-' + t : ''; };
   const cqcls = r.cq === 'Support Needed' ? 't-flag' : r.cq === 'Exceptional Performance' ? 't-exc' : r.cq === 'Achieved Expectations' ? 't-ok' : '';
   const kpi = f => `<span class="f"><input class="num ${kcls(f)}" type="number" min="0" max="100" step="0.1" data-f="${f}" value="${esc(r[f])}"><span class="pct">%</span></span>`;
-  const below = base === 'flag' || base === 'watch';
-  const canOv = below || !!r.override;
+  const canOv = base === 'flag' || !!r.override;
+  const sub = res.stepdown ? 'Flag overridden' : res.carried ? 'Carried from ' + wkDate(res.carried.wk) : st > 1 ? st + ' weeks in a row' : '';
   const needReason = !!r.override && !String(r.ovReason || '').trim();
   const list = cmts(wk, k);
   const open = openC.has(k);
@@ -395,12 +421,13 @@ function rowHtml(a, k, r, res, st, wk){
     <td><span class="f"><input class="num" type="number" min="0" data-f="unique" value="${esc(r.unique)}"></span></td>
     <td>${kpi('att')}</td><td>${kpi('con')}</td><td>${kpi('t12')}</td>
     <td><select class="${cqcls}" data-f="cq" aria-label="Call Quality tier">${CQ.map(o => `<option value="${o}" ${r.cq === o ? 'selected' : ''}>${CQ_SHORT[o]}</option>`).join('')}</select></td>
-    <td><span class="pill ${status}">${LABEL[status]}</span>${status === 'override' ? `<span class="streak">Was ${LABEL[base]}</span>` : st > 1 ? `<span class="streak">${st} weeks in a row</span>` : ''}</td>
+    <td><span class="pill ${status}">${LABEL[status]}</span>${sub ? `<span class="streak">${sub}</span>` : ''}</td>
     <td><label class="planbox"><input type="checkbox" data-f="plan" ${r.plan ? 'checked' : ''}> Needed</label></td>
   </tr>
   <tr class="detail" data-row="${k}"><td></td><td colspan="10"><div class="detailgrid">
     <textarea rows="1" data-f="notes" placeholder="Add notes, risks or agreed actions">${esc(r.notes)}</textarea>
-    <div class="ovbox ${r.override ? 'on' : ''} ${canOv ? '' : 'off'}" title="${canOv ? '' : 'Available when an adviser is on Flag or Watch'}">
+    ${res.carryRaw ? `<label class="clearbox ${r.clearWatch ? 'on' : ''}" title="Carried Watch from the override on ${wkDate(res.carryRaw.wk)}"><input type="checkbox" data-f="clearWatch" ${r.clearWatch ? 'checked' : ''}> Clear watch</label>` : ''}
+    <div class="ovbox ${r.override ? 'on' : ''} ${canOv ? '' : 'off'}" title="${canOv ? 'Moves a Flag down to Watch, and the Watch carries forward until cleared' : 'Available when an adviser is on Flag'}">
       <label class="ovtoggle"><input type="checkbox" data-f="override" ${r.override ? 'checked' : ''} ${canOv ? '' : 'disabled'}> Override</label>
       ${r.override ? `<input class="txt ${needReason ? 'need' : ''}" type="text" data-f="ovReason" placeholder="Reason (required)" value="${esc(r.ovReason)}">` : ''}
       ${needReason ? '<span class="ovhint">Add a reason to apply</span>' : ''}
@@ -452,18 +479,19 @@ function render(){
 
   PARTNERS.forEach(p => {
     const list = ADVISERS.filter(a => a.book === p.book);
-    const c = summary[p.id] = {flag:0, watch:0, ok:0, override:0, plan:0, n:list.length};
+    const c = summary[p.id] = {flag:0, watch:0, ok:0, carried:0, plan:0, n:list.length};
     let rows = '';
     list.forEach(a => {
       const k = key(a.name);
       const r = rec(wk, a);
-      const res = assess(r);
+      const res = assess(r, a, wk);
       if(c[res.status] !== undefined) c[res.status]++;
+      if(res.status === 'watch' && res.carried && !res.stepdown) c.carried++;
       if(r.plan) c.plan++;
       const st = (res.status === 'flag' || res.status === 'watch') ? streak(a) : 0;
       const n = cmts(wk, k).length;
-      if(res.status === 'flag' || res.status === 'watch') alerts.push({a, p, res, st, plan:r.plan, n});
-      if(res.status === 'override') overs.push({a, p, res, r, n});
+      if(res.status === 'flag' || res.status === 'watch') alerts.push({a, p, res, r, st, plan:r.plan, n});
+      if(res.stepdown) overs.push({a, p, res, r, n});
       rows += rowHtml(a, k, r, res, st, wk);
     });
     const sec = document.createElement('section');
@@ -478,7 +506,7 @@ function render(){
   document.getElementById('overview').innerHTML = PARTNERS.map(p => {
     const c = summary[p.id];
     return `<div class="ov ${p.id}"><h2><span class="chip">${p.book}</span>${p.name}<span>${c.n} advisers</span></h2><div class="stats">
-      ${stat(c.flag, 'Flag', 'flag')}${stat(c.watch, 'Watch', 'watch')}${stat(c.override, 'Overridden', 'override')}${stat(c.ok, 'On track', 'ok')}${stat(c.plan, 'Success plans', 'plan')}</div></div>`;
+      ${stat(c.flag, 'Flag', 'flag')}${stat(c.watch, c.carried ? `Watch, ${c.carried} carried` : 'Watch', 'watch')}${stat(c.ok, 'On track', 'ok')}${stat(c.plan, 'Success plans', 'plan')}</div></div>`;
   }).join('');
 
   const metaLine = parts => { const s = parts.filter(Boolean).join(' &middot; '); return s ? `<div class="meta">${s}</div>` : ''; };
@@ -486,7 +514,7 @@ function render(){
   document.getElementById('alerts').innerHTML = alerts.length
     ? alerts.map(x => `<div class="alert ${x.res.status}">
         <div class="who">${esc(x.a.name)}<span class="chip ${x.p.id}">${x.p.book}</span></div>
-        <div><ul>${[...x.res.reasons.flag, ...x.res.reasons.watch].map(s => `<li>${esc(s)}</li>`).join('')}</ul>
+        <div><ul>${alertLines(x).map(s => `<li>${s}</li>`).join('')}</ul>
         ${metaLine([x.st > 1 ? x.st + ' weeks in a row' : '', x.plan ? 'Success plan marked as needed' : '', x.n ? x.n + (x.n === 1 ? ' comment' : ' comments') : ''])}</div>
       </div>`).join('')
     : ADVISERS.every(a => !hasData(rec(wk, a)))
@@ -497,10 +525,21 @@ function render(){
   document.getElementById('overrides').innerHTML = overs.map(x => `<div class="alert override">
       <div class="who">${esc(x.a.name)}<span class="chip ${x.p.id}">${x.p.book}</span></div>
       <div><div class="why">&ldquo;${esc(x.r.ovReason)}&rdquo;</div>
-      ${metaLine(['Would have been ' + LABEL[x.res.base], x.r.ovBy ? 'Override by ' + esc(x.r.ovBy) : '', x.n ? x.n + (x.n === 1 ? ' comment' : ' comments') : ''])}</div>
+      ${metaLine(['Flag moved to Watch, carries forward until cleared', x.r.ovBy ? 'Override by ' + esc(x.r.ovBy) : ''])}</div>
     </div>`).join('');
 
   if(keep){ const el = partnersEl.querySelector(`[data-k="${keep.k}"][data-f="${keep.f}"]`); if(el) el.focus(); }
+}
+
+function alertLines(x){
+  const out = [];
+  const {res, r} = x;
+  if(res.stepdown) out.push(`Flag overridden to Watch: <i>&ldquo;${esc(r.ovReason)}&rdquo;</i>`);
+  if(res.carried && !res.stepdown) out.push(`Carried Watch from ${esc(wkDate(res.carried.wk))}: <i>&ldquo;${esc(res.carried.reason)}&rdquo;</i>`);
+  if(res.base === 'flag' && !res.stepdown) res.reasons.flag.forEach(s => out.push(esc(s)));
+  if(res.stepdown) res.reasons.flag.forEach(s => out.push('Was: ' + esc(s)));
+  res.reasons.watch.forEach(s => out.push(esc(s)));
+  return out;
 }
 
 function fit(el){ el.style.height = 'auto'; el.style.height = el.scrollHeight + 2 + 'px'; }
