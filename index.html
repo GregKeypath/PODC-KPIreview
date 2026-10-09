@@ -185,7 +185,7 @@ input.txt.need{border-color:var(--ovr);box-shadow:0 0 0 3px var(--ovr-bg)}
   </section>
 
   <section id="ovsec" hidden>
-    <p class="sectitle" style="--st:var(--ovr)">Manager override applied</p>
+    <p class="sectitle" style="--st:var(--ovr)">Override applied</p>
     <div class="alerts" id="overrides"></div>
   </section>
 
@@ -194,7 +194,7 @@ input.txt.need{border-color:var(--ovr);box-shadow:0 0 0 3px var(--ovr-bg)}
   <div class="legend">
     <span><i class="sw" style="background:var(--flag)"></i>Flag: an FY27 KPI is in Support Needed</span>
     <span><i class="sw" style="background:var(--watch)"></i>Watch: call attempts or vCITA below the minimum for days worked</span>
-    <span><i class="sw" style="background:var(--ovr)"></i>Overridden: a manager has accepted the reason</span>
+    <span><i class="sw" style="background:var(--ovr)"></i>Overridden: a reason has been accepted</span>
     <span><i class="sw" style="background:var(--ok)"></i>On track, Achieved Expectations</span>
     <span><i class="sw" style="background:var(--exc)"></i>Exceptional Performance</span>
   </div>
@@ -401,7 +401,7 @@ function rowHtml(a, k, r, res, st, wk){
   <tr class="detail" data-row="${k}"><td></td><td colspan="10"><div class="detailgrid">
     <textarea rows="1" data-f="notes" placeholder="Add notes, risks or agreed actions">${esc(r.notes)}</textarea>
     <div class="ovbox ${r.override ? 'on' : ''} ${canOv ? '' : 'off'}" title="${canOv ? '' : 'Available when an adviser is on Flag or Watch'}">
-      <label class="ovtoggle"><input type="checkbox" data-f="override" ${r.override ? 'checked' : ''} ${canOv ? '' : 'disabled'}> Manager override</label>
+      <label class="ovtoggle"><input type="checkbox" data-f="override" ${r.override ? 'checked' : ''} ${canOv ? '' : 'disabled'}> Override</label>
       ${r.override ? `<input class="txt ${needReason ? 'need' : ''}" type="text" data-f="ovReason" placeholder="Reason (required)" value="${esc(r.ovReason)}">` : ''}
       ${needReason ? '<span class="ovhint">Add a reason to apply</span>' : ''}
     </div>
