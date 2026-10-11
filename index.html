@@ -139,36 +139,42 @@ textarea:focus{background:var(--panel);border-color:var(--focus);outline:none}
 .clearbox{display:inline-flex;align-items:center;gap:6px;background:var(--watch-bg);color:var(--watch);border-radius:8px;padding:4px 12px;min-height:34px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .clearbox input{width:16px;height:16px;accent-color:var(--ok);cursor:pointer}
 .clearbox.on{background:var(--ok-bg);color:var(--ok)}
-.ovbox{display:flex;align-items:center;gap:8px;background:var(--field);border-radius:8px;padding:4px 6px 4px 10px;min-height:34px}
-.ovbox.on{background:var(--ovr-bg)}
-.ovbox.off{opacity:.55}
-.ovtoggle{display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;white-space:nowrap;color:var(--muted)}
-.ovbox.on .ovtoggle{color:var(--ovr);font-weight:600}
-.ovtoggle input{width:16px;height:16px;accent-color:var(--ovr);cursor:pointer}
-.ovbox.off .ovtoggle{cursor:not-allowed}
-input.txt{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 8px;width:240px}
+tbody tr.detail td{padding:0 10px 12px;vertical-align:top}
+tbody tr.detail td.notescell,tbody tr.detail td.ovcell{border-left:2px solid var(--divider)}
+.ovbox{display:grid;gap:6px}
+.ovtoggle{display:inline-flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;color:var(--muted);width:max-content;padding:4px 10px;border-radius:7px;background:var(--field)}
+.ovtoggle:hover{background:var(--fieldhover)}
+.ovbox.on .ovtoggle{background:var(--ovr-bg);color:var(--ovr);font-weight:600}
+.ovtoggle input{width:14px;height:14px;margin:0;accent-color:var(--ovr);cursor:pointer}
+.ovbox.off{opacity:.45}
+.ovbox.off .ovtoggle{cursor:not-allowed;background:transparent}
+input.txt{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 8px}
+.ovbox input.txt{width:100%;font-size:12px}
+.ovhint{font-size:11px;color:var(--ovr)}
+.thread{display:grid;gap:2px;border-left:3px solid var(--lav);padding-left:10px}
+.cm{display:flex;gap:8px;align-items:flex-start;padding:3px 0}
+.cline{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:8px;font-size:13px;line-height:1.45}
+.cline b{font-weight:600;font-size:12px}
+.cm.legacy .cline{color:var(--muted)}
+.av{width:20px;height:20px;border-radius:50%;background:var(--av);color:#fff;font-size:9px;font-weight:700;display:inline-grid;place-items:center;flex:none;margin-top:1px}
+.when{color:var(--faint);font-size:11px}
+.cmt{white-space:pre-wrap;flex:1 1 260px;min-width:0}
+.cdel{background:none;border:0;color:var(--faint);cursor:pointer;font-size:11px;padding:2px 6px;border-radius:6px;opacity:0;flex:none}
+.cm:hover .cdel,.cdel:focus{opacity:1}
+.cdel:hover{color:var(--flag);background:var(--flag-bg)}
+.cnew{display:flex;gap:6px;align-items:center}
+.cnew input.txt{flex:1;min-width:0;width:auto;background:transparent;border-color:transparent;font-size:13px;padding:5px 8px;margin-left:-8px}
+.cnew input.txt:hover{background:var(--field)}
+.cnew input.txt:focus{background:var(--panel);border-color:var(--focus)}
+.cpost{background:var(--blue);color:#fff;border:0;border-radius:7px;padding:4px 12px;cursor:pointer;font-weight:600;font-size:12px;opacity:0;pointer-events:none}
+.cnew:focus-within .cpost,.cpost.has{opacity:1;pointer-events:auto}
+.cpost:hover{background:var(--navy)}
 input.txt.need{border-color:var(--ovr);box-shadow:0 0 0 3px var(--ovr-bg)}
-.ovhint{font-size:11px;color:var(--ovr);white-space:nowrap}
 .cbtn{display:inline-flex;align-items:center;gap:6px;background:var(--field);border:0;border-radius:8px;padding:7px 12px;cursor:pointer;color:var(--muted);white-space:nowrap;min-height:34px}
 .cbtn:hover{background:var(--fieldhover);color:var(--ink)}
 .cbtn.open{background:var(--plan-bg);color:var(--plan);font-weight:600}
 .cbtn b{background:var(--blue);color:#fff;border-radius:999px;font-size:11px;padding:1px 7px;font-weight:600}
 
-.thread{background:var(--field);border-radius:10px;padding:8px;display:grid;gap:6px}
-.cm{display:flex;gap:8px;align-items:flex-start;background:var(--panel);border-radius:8px;padding:6px 10px;box-shadow:0 1px 2px rgba(29,43,79,.05)}
-.cm.legacy{background:transparent;box-shadow:none;border:1px dashed var(--line)}
-.cbody{flex:1;min-width:0;display:grid;gap:1px}
-.cmh{display:flex;align-items:center;gap:8px;font-size:12px}
-.av{width:22px;height:22px;border-radius:50%;background:var(--av);color:#fff;font-size:10px;font-weight:700;display:inline-grid;place-items:center;flex:none}
-.when{color:var(--faint);font-size:12px}
-.cdel{margin-left:auto;background:none;border:0;color:var(--faint);cursor:pointer;font-size:12px;padding:2px 6px;border-radius:6px}
-.cdel:hover{color:var(--flag);background:var(--flag-bg)}
-.cmt{white-space:pre-wrap}
-.cempty{color:var(--muted);font-size:13px}
-.cnew{display:flex;gap:8px}
-.cnew input{flex:1;min-width:0;width:auto}
-.cpost{background:var(--blue);color:#fff;border:0;border-radius:8px;padding:6px 16px;cursor:pointer;font-weight:600}
-.cpost:hover{background:var(--navy)}
 
 .legend{display:flex;flex-wrap:wrap;gap:8px 22px;color:var(--muted);font-size:12px}
 .legend span{display:inline-flex;align-items:center;gap:8px}
@@ -457,19 +463,16 @@ function rowHtml(a, k, r, res, st, wk, i){
     <td><span class="pill ${status}">${LABEL[status]}</span>${sub ? `<span class="streak">${sub}</span>` : ''}</td>
     <td><label class="planbox"><input type="checkbox" data-f="plan" ${r.plan ? 'checked' : ''}> Needed</label></td>
   </tr>
-  <tr class="detail${alt}" data-row="${k}"><td></td><td colspan="11"><div class="detailgrid">
-    <div class="thread">
-      ${r.notes ? `<div class="cm legacy"><span class="av" style="--av:var(--faint)">N</span><div class="cbody"><div class="cmh"><b>Earlier note</b><button class="cdel" data-clearnote="1">Remove</button></div><div class="cmt">${esc(r.notes)}</div></div></div>` : ''}
-      ${list.map(c => `<div class="cm"><span class="av" style="--av:${avColour(c.by)}">${esc(initials(c.by))}</span><div class="cbody"><div class="cmh"><b>${esc(c.by)}</b><span class="when">${esc(when(c.at))}</span>${c.by === me ? `<button class="cdel" data-del="${esc(c.id)}">Remove</button>` : ''}</div><div class="cmt">${esc(c.text)}</div></div></div>`).join('')}
-      <div class="cnew"><input class="txt" type="text" data-f="cdraft" placeholder="${me ? 'Add a note, risk or action as ' + esc(me) : 'Choose your name at the top to add notes'}" value="${esc(drafts[k] || '')}"><button class="cpost" data-post="${k}">Post</button></div>
-    </div>
-    ${res.carryRaw ? `<label class="clearbox ${r.clearWatch ? 'on' : ''}" title="Carried Watch from the override on ${wkDate(res.carryRaw.wk)}"><input type="checkbox" data-f="clearWatch" ${r.clearWatch ? 'checked' : ''}> Clear watch</label>` : ''}
-    <div class="ovbox ${r.override ? 'on' : ''} ${canOv ? '' : 'off'}" title="${canOv ? 'Clears the Flag or Watch for this week once a reason is entered' : 'Available when an adviser is on Flag or Watch'}">
+  <tr class="detail${alt}" data-row="${k}"><td></td><td colspan="9" class="notescell"><div class="thread">
+      ${r.notes ? `<div class="cm legacy"><span class="av" style="--av:var(--faint)">N</span><div class="cline"><b>Earlier note</b><span class="cmt">${esc(r.notes)}</span></div><button class="cdel" data-clearnote="1" aria-label="Remove note">Remove</button></div>` : ''}
+      ${list.map(c => `<div class="cm"><span class="av" style="--av:${avColour(c.by)}">${esc(initials(c.by))}</span><div class="cline"><b>${esc(c.by)}</b><span class="when">${esc(when(c.at))}</span><span class="cmt">${esc(c.text)}</span></div>${c.by === me ? `<button class="cdel" data-del="${esc(c.id)}" aria-label="Remove note">Remove</button>` : ''}</div>`).join('')}
+      <div class="cnew"><input class="txt" type="text" data-f="cdraft" placeholder="${me ? 'Add a note, risk or action' : 'Choose your name at the top to add notes'}" value="${esc(drafts[k] || '')}"><button class="cpost ${(drafts[k] || '').trim() ? 'has' : ''}" data-post="${k}">Post</button></div>
+    </div></td>
+    <td colspan="2" class="ovcell"><div class="ovbox ${r.override ? 'on' : ''} ${canOv ? '' : 'off'}" title="${canOv ? 'Clears the Flag or Watch for this week once a reason is entered' : 'Available when an adviser is on Flag or Watch'}">
       <label class="ovtoggle"><input type="checkbox" data-f="override" ${r.override ? 'checked' : ''} ${canOv ? '' : 'disabled'}> Override</label>
       ${r.override ? `<input class="txt ${needReason ? 'need' : ''}" type="text" data-f="ovReason" placeholder="Reason (required)" value="${esc(r.ovReason)}">` : ''}
       ${needReason ? '<span class="ovhint">Add a reason to apply</span>' : ''}
-    </div>
-  </div></td></tr>`;
+    </div></td></tr>`;
   return html;
 }
 
