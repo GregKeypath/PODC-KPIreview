@@ -428,7 +428,7 @@ function rowHtml(a, k, r, res, st, wk, i){
   const shortA = expA !== null && num(r.attempts) !== null && num(r.attempts) < expA;
   const shortV = expV !== null && num(r.vcita) !== null && num(r.vcita) < expV;
   const kcls = f => { const t = tier(f, num(r[f])); return t ? 't-' + t : ''; };
-  const kpi = f => `<span class="f"><input class="num ${kcls(f)}" type="number" min="0" max="100" step="0.1" data-f="${f}" value="${esc(r[f])}"><span class="pct">%</span></span>`;
+  const kpi = f => `<span class="f"><input class="num ${kcls(f)}" type="text" inputmode="decimal" autocomplete="off" data-f="${f}" value="${esc(r[f])}"><span class="pct">%</span></span>`;
   const canOv = base === 'flag' || !!r.override;
   const sub = res.stepdown ? 'Flag overridden' : res.carried ? 'Carried from ' + wkDate(res.carried.wk) : st > 1 ? st + ' weeks in a row' : '';
   const needReason = !!r.override && !String(r.ovReason || '').trim();
@@ -436,11 +436,11 @@ function rowHtml(a, k, r, res, st, wk, i){
   const open = openC.has(k);
   let html = `<tr class="main${alt}" data-row="${k}">
     <td class="name">${esc(a.name)}</td>
-    <td><span class="f"><input class="num days" type="number" min="0" max="5" step="0.5" data-f="days" value="${esc(r.days)}"></span></td>
-    <td><span class="f"><input class="num" type="number" min="0" data-f="attempts" value="${esc(r.attempts)}"><span class="of ${shortA ? 'short' : ''}">${expA !== null ? '/ ' + expA : ''}</span></span></td>
-    <td><span class="f"><input class="num" type="number" min="0" data-f="vcita" value="${esc(r.vcita)}"><span class="of ${shortV ? 'short' : ''}">${expV !== null ? '/ ' + expV : ''}</span></span></td>
-    <td><span class="f"><input class="num" type="number" min="0" data-f="sts" value="${esc(r.sts)}"></span></td>
-    <td><span class="f"><input class="num" type="number" min="0" data-f="unique" value="${esc(r.unique)}"></span></td>
+    <td><span class="f"><input class="num days" type="text" inputmode="decimal" autocomplete="off" data-f="days" value="${esc(r.days)}"></span></td>
+    <td><span class="f"><input class="num" type="text" inputmode="numeric" autocomplete="off" data-f="attempts" value="${esc(r.attempts)}"><span class="of ${shortA ? 'short' : ''}">${expA !== null ? '/ ' + expA : ''}</span></span></td>
+    <td><span class="f"><input class="num" type="text" inputmode="numeric" autocomplete="off" data-f="vcita" value="${esc(r.vcita)}"><span class="of ${shortV ? 'short' : ''}">${expV !== null ? '/ ' + expV : ''}</span></span></td>
+    <td><span class="f"><input class="num" type="text" inputmode="numeric" autocomplete="off" data-f="sts" value="${esc(r.sts)}"></span></td>
+    <td><span class="f"><input class="num" type="text" inputmode="numeric" autocomplete="off" data-f="unique" value="${esc(r.unique)}"></span></td>
     <td>${kpi('att')}</td><td>${kpi('con')}</td><td>${kpi('t12')}</td>
     <td><span class="pill ${status}">${LABEL[status]}</span>${sub ? `<span class="streak">${sub}</span>` : ''}</td>
     <td><label class="planbox"><input type="checkbox" data-f="plan" ${r.plan ? 'checked' : ''}> Needed</label></td>
@@ -474,10 +474,11 @@ function bind(sec){
       el.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); postComment(k); } });
       return;
     }
+    if(el.classList.contains('num')) el.addEventListener('input', () => { const v = el.value.replace(/[^0-9.]/g, ''); if(v !== el.value){ const p = Math.max(0, el.selectionStart - 1); el.value = v; el.setSelectionRange(p, p); } });
     const ev = (el.tagName === 'TEXTAREA' || el.type === 'number' || el.type === 'text') ? 'input' : 'change';
     el.addEventListener(ev, () => onEdit(k, el));
-    if(el.type === 'number' || el.type === 'text') el.addEventListener('change', () => render());
-    if(el.type === 'number') el.addEventListener('input', () => { clearTimeout(liveTimer); liveTimer = setTimeout(render, 350); });
+    if(el.type === 'text') el.addEventListener('change', () => render());
+    if(el.classList.contains('num')) el.addEventListener('input', () => { clearTimeout(liveTimer); liveTimer = setTimeout(render, 350); });
     if(el.tagName === 'TEXTAREA'){ fit(el); el.addEventListener('input', () => fit(el)); }
   });
   sec.querySelectorAll('[data-toggle]').forEach(b => b.onclick = () => { const k = b.dataset.toggle; openC.has(k) ? openC.delete(k) : openC.add(k); if(openC.has(k)) focusNext = {k, f:'cdraft'}; render(); });
@@ -487,7 +488,7 @@ function bind(sec){
 
 function render(){
   const ae = document.activeElement;
-  const keep = focusNext || (ae && ae.dataset && ae.dataset.k ? {k:ae.dataset.k, f:ae.dataset.f} : null);
+  const keep = focusNext || (ae && ae.dataset && ae.dataset.k ? {k:ae.dataset.k, f:ae.dataset.f, s:ae.selectionStart, e:ae.selectionEnd} : null);
   focusNext = null;
   const wk = iso(week);
   document.getElementById('weeklabel').textContent = 'Week of ' + fmt(week);
@@ -549,7 +550,7 @@ function render(){
       ${metaLine(['Flag moved to Watch, carries forward until cleared', x.r.ovBy ? 'Override by ' + esc(x.r.ovBy) : ''])}</div>
     </div>`).join('');
 
-  if(keep){ const el = partnersEl.querySelector(`[data-k="${keep.k}"][data-f="${keep.f}"]`); if(el) el.focus(); }
+  if(keep){ const el = partnersEl.querySelector(`[data-k="${keep.k}"][data-f="${keep.f}"]`); if(el){ el.focus(); if(keep.s != null && el.setSelectionRange){ try{ el.setSelectionRange(keep.s, keep.e); }catch(x){} } } }
 }
 
 function alertLines(x){
