@@ -253,7 +253,7 @@ const ADVISERS = [
   {name:'Emma Arjoon', book:'MBS'},
   {name:'Inuri Nethisinghe', book:'MBS'}
 ];
-const MIN_ATTEMPTS = 15, MIN_VCITA = 10, MIN_CONTACT = 55;
+const MIN_ATTEMPTS = 15, MIN_VCITA = 10, MIN_CONTACT = 45;
 function rate(r){ const a = num(r.attempts), u = num(r.unique); return a && u !== null ? Math.round((u / a) * 1000) / 10 : null; }
 function rateCls(r){ const v = rate(r); return v === null ? '' : v < MIN_CONTACT ? 't-flag' : 't-ok'; }
 const KPI = {
@@ -429,7 +429,7 @@ const HEAD = p => `<thead><tr class="grp">
   <th>vCITA calls<small>min 10 a day</small></th>
   <th>Total STS<small>this week</small></th>
   <th>Unique<small>contacts</small></th>
-  <th>Contact rate<small>min 55%</small></th>
+  <th>Contact rate<small>min 45%</small></th>
   <th>Attempted<small>60-day, min 80%</small></th>
   <th>Contacted<small>60-day, min 45%</small></th>
   <th>T1 to T2<small>min 75%</small></th>
