@@ -227,7 +227,7 @@ input.txt.need{border-color:var(--ovr);box-shadow:0 0 0 3px var(--ovr-bg)}
   <div class="legend">
     <span><i class="sw" style="background:var(--flag)"></i>Flag: an FY27 KPI is in Support Needed</span>
     <span><i class="sw" style="background:var(--watch)"></i>Watch: call attempts or vCITA below the minimum for days worked</span>
-    <span><i class="sw" style="background:var(--ovr)"></i>Override: clears a Flag or Watch for that week once a reason is entered, and counts as On track</span>
+    <span><i class="sw" style="background:var(--ovr)"></i>Override: clears a Flag or Watch for that week and counts it as On track; add the why in the notes</span>
     <span><i class="sw" style="background:var(--ok)"></i>On track, Achieved Expectations</span>
     <span><i class="sw" style="background:var(--exc)"></i>Exceptional Performance</span>
   </div>
@@ -381,7 +381,7 @@ function assess(r, a, wk){
   res.stepdown = false;
   res.carryRaw = null;
   res.carried = null;
-  res.overridden = (res.base === 'flag' || res.base === 'watch') && !!r.override && !!String(r.ovReason || '').trim();
+  res.overridden = (res.base === 'flag' || res.base === 'watch') && !!r.override;
   if(res.overridden) res.status = 'ok';
   return res;
 }
@@ -448,7 +448,7 @@ function rowHtml(a, k, r, res, st, wk, i){
   const kpi = f => `<span class="f"><input class="num ${kcls(f)}" type="text" inputmode="decimal" autocomplete="off" data-f="${f}" value="${esc(r[f])}"><span class="pct">%</span></span>`;
   const canOv = base === 'flag' || base === 'watch' || !!r.override;
   const sub = res.overridden ? 'Overridden, was ' + LABEL[base] : res.stepdown ? 'Flag overridden' : res.carried ? 'Carried from ' + wkDate(res.carried.wk) : st > 1 ? st + ' weeks in a row' : '';
-  const needReason = !!r.override && !String(r.ovReason || '').trim();
+  const needReason = false;
   const list = cmts(wk, k);
   const open = openC.has(k);
   let html = `<tr class="main${alt}" data-row="${k}">
@@ -468,10 +468,8 @@ function rowHtml(a, k, r, res, st, wk, i){
       ${list.map(c => `<div class="cm"><span class="av" style="--av:${avColour(c.by)}">${esc(initials(c.by))}</span><div class="cline"><b>${esc(c.by)}</b><span class="when">${esc(when(c.at))}</span><span class="cmt">${esc(c.text)}</span></div>${c.by === me ? `<button class="cdel" data-del="${esc(c.id)}" aria-label="Remove note">Remove</button>` : ''}</div>`).join('')}
       <div class="cnew"><input class="txt" type="text" data-f="cdraft" placeholder="${me ? 'Add a note, risk or action' : 'Choose your name at the top to add notes'}" value="${esc(drafts[k] || '')}"><button class="cpost ${(drafts[k] || '').trim() ? 'has' : ''}" data-post="${k}">Post</button></div>
     </div></td>
-    <td colspan="2" class="ovcell"><div class="ovbox ${r.override ? 'on' : ''} ${canOv ? '' : 'off'}" title="${canOv ? 'Clears the Flag or Watch for this week once a reason is entered' : 'Available when an adviser is on Flag or Watch'}">
+    <td colspan="2" class="ovcell"><div class="ovbox ${r.override ? 'on' : ''} ${canOv ? '' : 'off'}" title="${canOv ? 'Clears the Flag or Watch for this week' : 'Available when an adviser is on Flag or Watch'}">
       <label class="ovtoggle"><input type="checkbox" data-f="override" ${r.override ? 'checked' : ''} ${canOv ? '' : 'disabled'}> Override</label>
-      ${r.override ? `<input class="txt ${needReason ? 'need' : ''}" type="text" data-f="ovReason" placeholder="Reason (required)" value="${esc(r.ovReason)}">` : ''}
-      ${needReason ? '<span class="ovhint">Add a reason to apply</span>' : ''}
     </div></td></tr>`;
   return html;
 }
@@ -566,7 +564,7 @@ function render(){
   document.getElementById('ovsec').hidden = !overs.length;
   document.getElementById('overrides').innerHTML = overs.map(x => `<div class="alert override">
       <div class="who">${esc(x.a.name)}<span class="chip ${x.p.id}">${x.p.book}</span></div>
-      <div><div class="why">&ldquo;${esc(x.r.ovReason)}&rdquo;</div>
+      <div>
       ${metaLine(['Was ' + LABEL[x.res.base] + ', counted as On track this week', x.r.ovBy ? 'Override by ' + esc(x.r.ovBy) : ''])}</div>
     </div>`).join('');
 
@@ -593,7 +591,7 @@ function onEdit(k, el){
   const f = el.dataset.f;
   r[f] = el.type === 'checkbox' ? el.checked : el.value;
   if(f === 'override'){
-    if(el.checked){ r.ovBy = me || ''; focusNext = {k, f:'ovReason'}; }
+    if(el.checked){ r.ovBy = me || ''; }
   }
   if(el.tagName === 'SELECT' || el.type === 'checkbox') render();
   setSave('Saving...');
