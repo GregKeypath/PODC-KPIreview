@@ -131,7 +131,7 @@ select:hover{background:var(--fieldhover)}
 .planbox input{width:16px;height:16px;accent-color:var(--flag);cursor:pointer}
 .planbox:has(input:checked){color:var(--flag);font-weight:600}
 
-.detailgrid{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:10px;align-items:start}
+.detailgrid{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:start}
 textarea{width:100%;min-height:34px;resize:none;overflow:hidden;background:var(--field);border:1px solid transparent;border-radius:8px;padding:7px 10px;color:var(--ink);line-height:1.45}
 textarea::placeholder,input.txt::placeholder{color:var(--faint)}
 textarea:hover{background:var(--fieldhover)}
@@ -154,14 +154,16 @@ input.txt.need{border-color:var(--ovr);box-shadow:0 0 0 3px var(--ovr-bg)}
 .cbtn.open{background:var(--plan-bg);color:var(--plan);font-weight:600}
 .cbtn b{background:var(--blue);color:#fff;border-radius:999px;font-size:11px;padding:1px 7px;font-weight:600}
 
-.thread{background:linear-gradient(180deg,var(--lav),var(--panel));border-radius:12px;padding:12px 14px;display:grid;gap:10px}
-.cm{display:grid;gap:3px;background:var(--panel);border-radius:10px;padding:8px 12px;box-shadow:0 1px 2px rgba(29,43,79,.05)}
-.cmh{display:flex;align-items:center;gap:8px;font-size:13px}
+.thread{background:var(--field);border-radius:10px;padding:8px;display:grid;gap:6px}
+.cm{display:flex;gap:8px;align-items:flex-start;background:var(--panel);border-radius:8px;padding:6px 10px;box-shadow:0 1px 2px rgba(29,43,79,.05)}
+.cm.legacy{background:transparent;box-shadow:none;border:1px dashed var(--line)}
+.cbody{flex:1;min-width:0;display:grid;gap:1px}
+.cmh{display:flex;align-items:center;gap:8px;font-size:12px}
 .av{width:22px;height:22px;border-radius:50%;background:var(--av);color:#fff;font-size:10px;font-weight:700;display:inline-grid;place-items:center;flex:none}
 .when{color:var(--faint);font-size:12px}
 .cdel{margin-left:auto;background:none;border:0;color:var(--faint);cursor:pointer;font-size:12px;padding:2px 6px;border-radius:6px}
 .cdel:hover{color:var(--flag);background:var(--flag-bg)}
-.cmt{white-space:pre-wrap;padding-left:30px}
+.cmt{white-space:pre-wrap}
 .cempty{color:var(--muted);font-size:13px}
 .cnew{display:flex;gap:8px}
 .cnew input{flex:1;min-width:0;width:auto}
@@ -456,21 +458,18 @@ function rowHtml(a, k, r, res, st, wk, i){
     <td><label class="planbox"><input type="checkbox" data-f="plan" ${r.plan ? 'checked' : ''}> Needed</label></td>
   </tr>
   <tr class="detail${alt}" data-row="${k}"><td></td><td colspan="11"><div class="detailgrid">
-    <textarea rows="1" data-f="notes" placeholder="Add notes, risks or agreed actions">${esc(r.notes)}</textarea>
+    <div class="thread">
+      ${r.notes ? `<div class="cm legacy"><span class="av" style="--av:var(--faint)">N</span><div class="cbody"><div class="cmh"><b>Earlier note</b><button class="cdel" data-clearnote="1">Remove</button></div><div class="cmt">${esc(r.notes)}</div></div></div>` : ''}
+      ${list.map(c => `<div class="cm"><span class="av" style="--av:${avColour(c.by)}">${esc(initials(c.by))}</span><div class="cbody"><div class="cmh"><b>${esc(c.by)}</b><span class="when">${esc(when(c.at))}</span>${c.by === me ? `<button class="cdel" data-del="${esc(c.id)}">Remove</button>` : ''}</div><div class="cmt">${esc(c.text)}</div></div></div>`).join('')}
+      <div class="cnew"><input class="txt" type="text" data-f="cdraft" placeholder="${me ? 'Add a note, risk or action as ' + esc(me) : 'Choose your name at the top to add notes'}" value="${esc(drafts[k] || '')}"><button class="cpost" data-post="${k}">Post</button></div>
+    </div>
     ${res.carryRaw ? `<label class="clearbox ${r.clearWatch ? 'on' : ''}" title="Carried Watch from the override on ${wkDate(res.carryRaw.wk)}"><input type="checkbox" data-f="clearWatch" ${r.clearWatch ? 'checked' : ''}> Clear watch</label>` : ''}
     <div class="ovbox ${r.override ? 'on' : ''} ${canOv ? '' : 'off'}" title="${canOv ? 'Moves a Flag down to Watch, and the Watch carries forward until cleared' : 'Available when an adviser is on Flag'}">
       <label class="ovtoggle"><input type="checkbox" data-f="override" ${r.override ? 'checked' : ''} ${canOv ? '' : 'disabled'}> Override</label>
       ${r.override ? `<input class="txt ${needReason ? 'need' : ''}" type="text" data-f="ovReason" placeholder="Reason (required)" value="${esc(r.ovReason)}">` : ''}
       ${needReason ? '<span class="ovhint">Add a reason to apply</span>' : ''}
     </div>
-    <button class="cbtn ${open ? 'open' : ''}" data-toggle="${k}">Comments${list.length ? ` <b>${list.length}</b>` : ''}</button>
   </div></td></tr>`;
-  if(open){
-    html += `<tr class="crow${alt}" data-row="${k}"><td></td><td colspan="11"><div class="thread">
-      ${list.length ? list.map(c => `<div class="cm"><div class="cmh"><span class="av" style="--av:${avColour(c.by)}">${esc(initials(c.by))}</span><b>${esc(c.by)}</b><span class="when">${esc(when(c.at))}</span>${c.by === me ? `<button class="cdel" data-del="${esc(c.id)}">Remove</button>` : ''}</div><div class="cmt">${esc(c.text)}</div></div>`).join('') : '<div class="cempty">No comments for this week yet.</div>'}
-      <div class="cnew"><input class="txt" type="text" data-f="cdraft" placeholder="${me ? 'Write a comment as ' + esc(me) : 'Choose your name at the top to comment'}" value="${esc(drafts[k] || '')}"><button class="cpost" data-post="${k}">Post</button></div>
-    </div></td></tr>`;
-  }
   return html;
 }
 
@@ -493,6 +492,7 @@ function bind(sec){
   });
   sec.querySelectorAll('[data-toggle]').forEach(b => b.onclick = () => { const k = b.dataset.toggle; openC.has(k) ? openC.delete(k) : openC.add(k); if(openC.has(k)) focusNext = {k, f:'cdraft'}; render(); });
   sec.querySelectorAll('[data-post]').forEach(b => b.onclick = () => postComment(b.dataset.post));
+  sec.querySelectorAll('[data-clearnote]').forEach(b => b.onclick = () => { const k = b.closest('tr').dataset.row, wk = iso(week); all[wk][k].notes = ''; pending.add(wk + '|' + k); setSave('Saving...'); persist(wk, k); render(); });
   sec.querySelectorAll('[data-del]').forEach(b => b.onclick = () => deleteComment(b.closest('tr').dataset.row, b.dataset.del));
 }
 
