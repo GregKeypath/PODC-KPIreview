@@ -258,7 +258,7 @@ function rate(r){ const a = num(r.attempts), u = num(r.unique); return a && u !=
 function rateCls(r){ const v = rate(r); return v === null ? '' : v < MIN_CONTACT ? 't-flag' : 't-ok'; }
 const KPI = {
   att:{label:'60-Day Attempted', floor:80, ceil:90},
-  con:{label:'60-Day Contacted', floor:45, ceil:55},
+  con:{label:'60-Day Contacted', floor:55, ceil:Infinity},
   t12:{label:'T1 to T2', floor:75, ceil:85}
 };
 
@@ -431,7 +431,7 @@ const HEAD = p => `<thead><tr class="grp">
   <th>Unique<small>contacts</small></th>
   <th>Contact rate<small>min 45%</small></th>
   <th>Attempted<small>60-day, min 80%</small></th>
-  <th>Contacted<small>60-day, min 45%</small></th>
+  <th>Contacted<small>60-day, min 55%</small></th>
   <th>T1 to T2<small>min 75%</small></th>
   <th>Status</th>
   <th>Success plan</th>
