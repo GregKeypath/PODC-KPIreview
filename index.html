@@ -13,7 +13,7 @@
   --bg:#f4f6fd;--panel:#ffffff;--ink:#1d2b4f;--muted:#5f6f8f;--faint:#9aa6bd;--line:#e2e8f4;--field:#f3f6fc;--fieldhover:#e8eefa;--focus:#4a7bd8;
   --hero-ink:#ffffff;--hero-glass:rgba(255,255,255,.16);--hero-glass-hover:rgba(255,255,255,.28);--hero-muted:rgba(255,255,255,.78);
   --unsw:#f2b705;--unsw-ink:#4a3500;--unsw-soft:#fff6d6;--mbs:#0b5cb0;--mbs-ink:#ffffff;--mbs-soft:#e5effb;
-  --flag:#e23950;--flag-bg:#ffe9ec;--watch:#e8792b;--watch-bg:#fff1e6;--ok:#17a673;--ok-bg:#e3f8ef;--exc:#6a5be0;--exc-bg:#efedff;
+  --flag:#e23950;--flag-bg:#ffe9ec;--watch:#a67c00;--watch-bg:#fff3bf;--ok:#17a673;--ok-bg:#e3f8ef;--exc:#6a5be0;--exc-bg:#efedff;
   --act-tint:#eef4fe;--kpi-tint:#f5f3ff;--rev-tint:#effaf4;--alt:#fafbfe;--divider:#d5ddec;
   --ovr:#3d68cc;--ovr-bg:#e9e8fc;--plan:#0b5cb0;--plan-bg:#e5effb;--none:#7d89a1;--none-bg:#eff2f8;
   --shadow:0 1px 2px rgba(29,43,79,.05),0 6px 20px rgba(29,43,79,.06);
@@ -119,6 +119,7 @@ input.num:focus,input.txt:focus{background:var(--panel);border-color:var(--focus
 select{width:100%;background:var(--field);border:1px solid transparent;border-radius:8px;padding:6px 8px;cursor:pointer}
 select:hover{background:var(--fieldhover)}
 .t-flag{background:var(--flag-bg)!important;color:var(--flag)}
+.t-watch{background:var(--watch-bg)!important;color:var(--watch)}
 .t-ok{background:var(--ok-bg)!important;color:var(--ok)}
 .t-exc{background:var(--exc-bg)!important;color:var(--exc)}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;background:var(--pb);color:var(--pt)}
@@ -217,19 +218,15 @@ input.txt.need{border-color:var(--ovr);box-shadow:0 0 0 3px var(--ovr-bg)}
     <div class="alerts" id="alerts"></div>
   </section>
 
-  <section id="ovsec" hidden>
-    <p class="sectitle" style="--st:var(--ovr)">Overrides this week</p>
-    <div class="alerts" id="overrides"></div>
-  </section>
 
   <div id="partners" style="display:grid;gap:34px"></div>
 
   <div class="legend">
-    <span><i class="sw" style="background:var(--flag)"></i>Flag: an FY27 KPI is in Support Needed</span>
-    <span><i class="sw" style="background:var(--watch)"></i>Watch: call attempts or vCITA below the minimum for days worked</span>
-    <span><i class="sw" style="background:var(--ovr)"></i>Override: keeps the Flag or Watch in the counts but takes them off Needs attention for that week; add the why in the notes</span>
-    <span><i class="sw" style="background:var(--ok)"></i>On track, Achieved Expectations</span>
-    <span><i class="sw" style="background:var(--exc)"></i>Exceptional Performance</span>
+    <span><i class="sw" style="background:var(--ok)"></i>On track: meets call attempts, vCITA and all three 60-day KPIs</span>
+    <span><i class="sw" style="background:var(--watch)"></i>Watch: below on call attempts, vCITA or a 60-day KPI; carries into the next week until figures are entered</span>
+    <span><i class="sw" style="background:var(--flag)"></i>Flag: two weeks in a row on Watch; stays until a week meets everything</span>
+    <span><i class="sw" style="background:var(--ovr)"></i>Override: takes them off Needs attention only; their status still counts</span>
+    <span><i class="sw" style="background:var(--faint)"></i>Contact rate is for information only</span>
   </div>
 </div>
 
@@ -255,7 +252,7 @@ const ADVISERS = [
 ];
 const MIN_ATTEMPTS = 15, MIN_VCITA = 10, MIN_CONTACT = 45;
 function rate(r){ const a = num(r.attempts), u = num(r.unique); return a && u !== null ? Math.round((u / a) * 1000) / 10 : null; }
-function rateCls(r){ const v = rate(r); return v === null ? '' : v < MIN_CONTACT ? 't-flag' : 't-ok'; }
+function rateCls(r){ const v = rate(r); return v === null ? '' : v < MIN_CONTACT ? 't-watch' : 't-ok'; }
 const KPI = {
   att:{label:'60-Day Attempted', floor:80, ceil:90},
   con:{label:'60-Day Contacted', floor:55, ceil:Infinity},
@@ -360,29 +357,50 @@ function cmts(wk, k){ return ((comments[wk] || {})[k] || []).slice().sort((x, y)
 
 function hasData(r){ return ['days','attempts','vcita','unique','att','con','t12','sts','notes'].some(k => r[k] !== undefined && r[k] !== '' && r[k] !== null); }
 
-function tier(k, v){ if(v === null) return ''; const t = KPI[k]; return v < t.floor ? 'flag' : v > t.ceil ? 'exc' : 'ok'; }
+function tier(k, v){ if(v === null) return ''; const t = KPI[k]; return v < t.floor ? 'watch' : v > t.ceil ? 'exc' : 'ok'; }
 
-function stepped(r, base){ return base === 'flag' && !!r.override && !!String(r.ovReason || '').trim(); }
+function entryOf(p1, p2){
+  if(p1 === 'flag') return {s:'flag', why:'flag'};
+  if(p1 === 'watch' && p2 === 'watch') return {s:'flag', why:'two'};
+  if(p1 === 'watch') return {s:'watch', why:'watch'};
+  return null;
+}
 
-function carryFrom(a, wk){
+function history(a, wk){
   const k = key(a.name);
-  let src = null;
+  let p1 = null, p2 = null;
   Object.keys(all).filter(w => w < wk).sort().forEach(w => {
-    const r = (all[w] || {})[k] || {};
-    if(stepped(r, baseOf(r).base)) src = {wk:w, reason:r.ovReason, by:r.ovBy};
-    if(r.clearWatch) src = null;
+    const b = baseOf((all[w] || {})[k] || {}).base;
+    if(b !== 'ok' && b !== 'watch') return;
+    const e = entryOf(p1, p2);
+    const fin = b === 'ok' ? 'ok' : e && e.s === 'flag' ? 'flag' : 'watch';
+    p2 = p1; p1 = fin;
   });
-  return src;
+  return entryOf(p1, p2);
 }
 
 function assess(r, a, wk){
   const res = baseOf(r);
-  res.status = res.base;
-  res.stepdown = false;
-  res.carryRaw = null;
-  res.carried = null;
-  res.overridden = (res.base === 'flag' || res.base === 'watch') && !!r.override;
+  const e = a && wk ? history(a, wk) : null;
+  res.entry = e;
+  if(res.base === 'ok') res.status = 'ok';
+  else if(res.base === 'watch') res.status = e && e.s === 'flag' ? 'flag' : 'watch';
+  else if(res.base === 'leave') res.status = 'leave';
+  else res.status = e ? e.s : res.base;
+  res.carriedOnly = res.base !== 'ok' && res.base !== 'watch' && res.base !== 'leave' && !!e;
+  res.overridden = (res.status === 'flag' || res.status === 'watch') && !!r.override;
   return res;
+}
+
+function statusNote(res){
+  const e = res.entry;
+  const bits = [];
+  if(res.status === 'flag') bits.push(e && e.why === 'two' ? '2 weeks on Watch' : 'Flag last week');
+  else if(res.status === 'watch' && res.carriedOnly) bits.push('Watch last week');
+  else if(res.status === 'watch' && e && e.s === 'watch') bits.push('2nd week, Flag next week if still below');
+  if(res.carriedOnly) bits.push('no figures yet');
+  if(res.overridden) bits.push('Overridden');
+  return bits.join(' &middot; ');
 }
 
 function baseOf(r){
@@ -390,16 +408,14 @@ function baseOf(r){
   if(!hasData(r)) return {base:'none', reasons};
   const days = num(r.days);
   if(days === 0) return {base:'leave', reasons};
-  ['att','con','t12'].forEach(k => { const v = num(r[k]); if(v !== null && v < KPI[k].floor) reasons.flag.push(`${KPI[k].label} ${v}% (below ${KPI[k].floor}%)`); });
   if(days !== null){
     const a = num(r.attempts), v = num(r.vcita);
     if(a !== null && a < MIN_ATTEMPTS * days) reasons.watch.push(`Call attempts ${a} of ${MIN_ATTEMPTS * days} expected (${days} days)`);
     if(v !== null && v < MIN_VCITA * days) reasons.watch.push(`vCITA calls ${v} of ${MIN_VCITA * days} expected (${days} days)`);
   }
-  const cr = rate(r);
-  if(cr !== null && cr < MIN_CONTACT) reasons.flag.push(`Contact rate ${cr}% (below ${MIN_CONTACT}%)`);
+  ['att','con','t12'].forEach(k => { const v = num(r[k]); if(v !== null && v < KPI[k].floor) reasons.watch.push(`${KPI[k].label} ${v}% (below ${KPI[k].floor}%)`); });
   const missing = days === null || num(r.attempts) === null || num(r.vcita) === null;
-  const base = reasons.flag.length ? 'flag' : reasons.watch.length ? 'watch' : missing ? 'part' : 'ok';
+  const base = reasons.watch.length ? 'watch' : missing ? 'part' : 'ok';
   return {base, reasons};
 }
 
@@ -445,8 +461,8 @@ function rowHtml(a, k, r, res, st, wk, i){
   const shortV = expV !== null && num(r.vcita) !== null && num(r.vcita) < expV;
   const kcls = f => { const t = tier(f, num(r[f])); return t ? 't-' + t : ''; };
   const kpi = f => `<span class="f"><input class="num ${kcls(f)}" type="text" inputmode="decimal" autocomplete="off" data-f="${f}" value="${esc(r[f])}"><span class="pct">%</span></span>`;
-  const canOv = base === 'flag' || base === 'watch' || !!r.override;
-  const sub = res.overridden ? 'Overridden' : res.stepdown ? 'Flag overridden' : res.carried ? 'Carried from ' + wkDate(res.carried.wk) : st > 1 ? st + ' weeks in a row' : '';
+  const canOv = status === 'flag' || status === 'watch' || !!r.override;
+  const sub = statusNote(res);
   const needReason = false;
   const list = cmts(wk, k);
   const open = openC.has(k);
@@ -505,7 +521,7 @@ function render(){
   document.getElementById('weeklabel').textContent = 'Week of ' + fmt(week);
   document.getElementById('weekpick').value = wk;
 
-  const alerts = [], overs = [];
+  const alerts = [];
   const summary = {};
   const partnersEl = document.getElementById('partners');
   partnersEl.innerHTML = '';
@@ -525,12 +541,12 @@ function render(){
       const r = rec(wk, a);
       const res = assess(r, a, wk);
       if(c[res.status] !== undefined) c[res.status]++;
-      if(res.status === 'watch' && res.carried && !res.stepdown) c.carried++;
+      if(res.carriedOnly && res.status === 'watch') c.carried++;
+      if(res.carriedOnly && res.status === 'flag') c.cflag = (c.cflag || 0) + 1;
       if(r.plan) c.plan++;
-      const st = (res.status === 'flag' || res.status === 'watch') ? streak(a) : 0;
+      const st = 0;
       const n = cmts(wk, k).length;
       if((res.status === 'flag' || res.status === 'watch') && !res.overridden) alerts.push({a, p, res, r, st, plan:r.plan, n});
-      if(res.overridden) overs.push({a, p, res, r, n});
       rows += rowHtml(a, k, r, res, st, wk, i);
     });
     const sec = document.createElement('section');
@@ -545,7 +561,7 @@ function render(){
   document.getElementById('overview').innerHTML = PARTNERS.map(p => {
     const c = summary[p.id];
     return `<div class="ov ${p.id}"><h2><span class="chip">${p.book}</span>${p.name}<span>${c.n} advisers</span></h2><div class="stats">
-      ${stat(c.flag, 'Flag', 'flag')}${stat(c.watch, c.carried ? `Watch, ${c.carried} carried` : 'Watch', 'watch')}${stat(c.ok, 'On track', 'ok')}${stat(c.plan, 'Success plans', 'plan')}</div></div>`;
+      ${stat(c.flag, c.cflag ? `Flag, ${c.cflag} carried` : 'Flag', 'flag')}${stat(c.watch, c.carried ? `Watch, ${c.carried} carried` : 'Watch', 'watch')}${stat(c.ok, 'On track', 'ok')}${stat(c.plan, 'Success plans', 'plan')}</div></div>`;
   }).join('');
 
   const metaLine = parts => { const s = parts.filter(Boolean).join(' &middot; '); return s ? `<div class="meta">${s}</div>` : ''; };
@@ -560,23 +576,18 @@ function render(){
       ? '<div class="empty">No figures entered for this week yet. Type each adviser\'s numbers into the tables below and they save as you go.</div>'
       : '<div class="empty">Nobody is below expectation this week.</div>';
 
-  document.getElementById('ovsec').hidden = !overs.length;
-  document.getElementById('overrides').innerHTML = overs.map(x => `<div class="alert override">
-      <div class="who">${esc(x.a.name)}<span class="chip ${x.p.id}">${x.p.book}</span></div>
-      <div>
-      ${metaLine(['Still counted as ' + LABEL[x.res.base] + ', off Needs attention this week', x.r.ovBy ? 'Override by ' + esc(x.r.ovBy) : ''])}</div>
-    </div>`).join('');
 
   if(keep){ const el = partnersEl.querySelector(`[data-k="${keep.k}"][data-f="${keep.f}"]`); if(el){ el.focus(); if(keep.s != null && el.setSelectionRange){ try{ el.setSelectionRange(keep.s, keep.e); }catch(x){} } } }
 }
 
 function alertLines(x){
   const out = [];
-  const {res, r} = x;
-  if(res.stepdown) out.push(`Flag overridden to Watch: <i>&ldquo;${esc(r.ovReason)}&rdquo;</i>`);
-  if(res.carried && !res.stepdown) out.push(`Carried Watch from ${esc(wkDate(res.carried.wk))}: <i>&ldquo;${esc(res.carried.reason)}&rdquo;</i>`);
-  if(res.base === 'flag' && !res.stepdown) res.reasons.flag.forEach(s => out.push(esc(s)));
-  if(res.stepdown) res.reasons.flag.forEach(s => out.push('Was: ' + esc(s)));
+  const {res} = x;
+  const e = res.entry;
+  if(res.status === 'flag') out.push(e && e.why === 'two' ? '<b>Flag:</b> two weeks in a row on Watch' : '<b>Flag:</b> still below after last week&rsquo;s Flag');
+  else if(res.carriedOnly) out.push('<b>Watch:</b> carried from last week');
+  else if(e && e.s === 'watch') out.push('<b>2nd week on Watch:</b> Flag next week if still below');
+  if(res.carriedOnly) out.push('No figures entered yet this week');
   res.reasons.watch.forEach(s => out.push(esc(s)));
   return out;
 }
