@@ -540,13 +540,11 @@ function render(){
       const k = key(a.name);
       const r = rec(wk, a);
       const res = assess(r, a, wk);
-      if(c[res.status] !== undefined) c[res.status]++;
-      if(res.carriedOnly && res.status === 'watch') c.carried++;
-      if(res.carriedOnly && res.status === 'flag') c.cflag = (c.cflag || 0) + 1;
+      if(c[res.status] !== undefined && !res.carriedOnly) c[res.status]++;
       if(r.plan) c.plan++;
       const st = 0;
       const n = cmts(wk, k).length;
-      if((res.status === 'flag' || res.status === 'watch') && !res.overridden) alerts.push({a, p, res, r, st, plan:r.plan, n});
+      if((res.status === 'flag' || res.status === 'watch') && !res.overridden && !res.carriedOnly) alerts.push({a, p, res, r, st, plan:r.plan, n});
       rows += rowHtml(a, k, r, res, st, wk, i);
     });
     const sec = document.createElement('section');
