@@ -222,7 +222,7 @@ input.txt.need{border-color:var(--ovr);box-shadow:0 0 0 3px var(--ovr-bg)}
   <div id="partners" style="display:grid;gap:34px"></div>
 
   <div class="legend">
-    <span><i class="sw" style="background:var(--ok)"></i>On track: meets call attempts, vCITA and all three 60-day KPIs</span>
+    <span><i class="sw" style="background:var(--ok)"></i>On track: meets call attempts (or has 38+ STS), vCITA and all three 60-day KPIs</span>
     <span><i class="sw" style="background:var(--watch)"></i>Watch: below on call attempts, vCITA or a 60-day KPI; carries into the next week until figures are entered</span>
     <span><i class="sw" style="background:var(--flag)"></i>Flag: two weeks in a row on Watch; stays until a week meets everything</span>
     <span><i class="sw" style="background:var(--ovr)"></i>Override: takes them off Needs attention only; their status still counts</span>
@@ -250,7 +250,8 @@ const ADVISERS = [
   {name:'Emma Arjoon', book:'MBS'},
   {name:'Inuri Nethisinghe', book:'MBS'}
 ];
-const MIN_ATTEMPTS = 15, MIN_VCITA = 10, MIN_CONTACT = 45;
+const MIN_ATTEMPTS = 15, MIN_VCITA = 10, MIN_CONTACT = 45, STS_COVER = 38;
+function stsCovers(r){ const s = num(r.sts); return s !== null && s >= STS_COVER; }
 function rate(r){ const a = num(r.attempts), u = num(r.unique); return a && u !== null ? Math.round((u / a) * 1000) / 10 : null; }
 function rateCls(r){ const v = rate(r); return v === null ? '' : v < MIN_CONTACT ? 't-watch' : 't-ok'; }
 const KPI = {
@@ -410,7 +411,7 @@ function baseOf(r){
   if(days === 0) return {base:'leave', reasons};
   if(days !== null){
     const a = num(r.attempts), v = num(r.vcita);
-    if(a !== null && a < MIN_ATTEMPTS * days) reasons.watch.push(`Call attempts ${a} of ${MIN_ATTEMPTS * days} expected (${days} days)`);
+    if(a !== null && a < MIN_ATTEMPTS * days && !stsCovers(r)) reasons.watch.push(`Call attempts ${a} of ${MIN_ATTEMPTS * days} expected (${days} days)`);
     if(v !== null && v < MIN_VCITA * days) reasons.watch.push(`vCITA calls ${v} of ${MIN_VCITA * days} expected (${days} days)`);
   }
   ['att','con','t12'].forEach(k => { const v = num(r[k]); if(v !== null && v < KPI[k].floor) reasons.watch.push(`${KPI[k].label} ${v}% (below ${KPI[k].floor}%)`); });
@@ -442,7 +443,7 @@ const HEAD = p => `<thead><tr class="grp">
   <th>Days<small>worked</small></th>
   <th>Call attempts<small>min 15 a day</small></th>
   <th>vCITA calls<small>min 10 a day</small></th>
-  <th>Total STS<small>this week</small></th>
+  <th>Total STS<small>38+ covers attempts</small></th>
   <th>Unique<small>contacts</small></th>
   <th>Contact rate<small>min 45%</small></th>
   <th>Attempted<small>60-day, min 80%</small></th>
@@ -457,7 +458,7 @@ function rowHtml(a, k, r, res, st, wk, i){
   const {status, base} = res;
   const days = num(r.days);
   const expA = days ? MIN_ATTEMPTS * days : null, expV = days ? MIN_VCITA * days : null;
-  const shortA = expA !== null && num(r.attempts) !== null && num(r.attempts) < expA;
+  const shortA = expA !== null && num(r.attempts) !== null && num(r.attempts) < expA && !stsCovers(r);
   const shortV = expV !== null && num(r.vcita) !== null && num(r.vcita) < expV;
   const kcls = f => { const t = tier(f, num(r[f])); return t ? 't-' + t : ''; };
   const kpi = f => `<span class="f"><input class="num ${kcls(f)}" type="text" inputmode="decimal" autocomplete="off" data-f="${f}" value="${esc(r[f])}"><span class="pct">%</span></span>`;
