@@ -253,7 +253,9 @@ const ADVISERS = [
   {name:'Inuri Nethisinghe', book:'MBS'}
 ];
 const MIN_ATTEMPTS = 15, MIN_VCITA = 10, MIN_CONTACT = 45, STS_COVER = 38;
-function stsCovers(r){ const s = num(r.sts); return s !== null && s >= STS_COVER; }
+const MBS_FACTOR = 0.8;
+function tg(a){ const m = a && a.book === 'MBS' ? MBS_FACTOR : 1; return {att:Math.round(MIN_ATTEMPTS * m * 10) / 10, vc:Math.round(MIN_VCITA * m * 10) / 10, sts:Math.round(STS_COVER * m)}; }
+function stsCovers(r, a){ const s = num(r.sts); return s !== null && s >= tg(a).sts; }
 function rate(r){ const a = num(r.attempts), u = num(r.unique); return a && u !== null ? Math.round((u / a) * 1000) / 10 : null; }
 function rateCls(r){ const v = rate(r); return v === null ? '' : v < MIN_CONTACT ? 't-watch' : 't-ok'; }
 const KPI = {
@@ -373,7 +375,7 @@ function history(a, wk){
   const k = key(a.name);
   let p1 = null, p2 = null;
   Object.keys(all).filter(w => w < wk).sort().forEach(w => {
-    const b = baseOf((all[w] || {})[k] || {}).base;
+    const b = baseOf((all[w] || {})[k] || {}, a).base;
     if(b !== 'ok' && b !== 'watch') return;
     const e = entryOf(p1, p2);
     const fin = b === 'ok' ? 'ok' : e && e.s === 'flag' ? 'flag' : 'watch';
@@ -383,7 +385,7 @@ function history(a, wk){
 }
 
 function assess(r, a, wk){
-  const res = baseOf(r);
+  const res = baseOf(r, a);
   const e = a && wk ? history(a, wk) : null;
   res.entry = e;
   if(res.base === 'ok') res.status = 'ok';
@@ -406,15 +408,16 @@ function statusNote(res){
   return bits.join(' &middot; ');
 }
 
-function baseOf(r){
+function baseOf(r, adv){
+  const t = tg(adv);
   const reasons = {flag:[], watch:[]};
   if(!hasData(r)) return {base:'none', reasons};
   const days = num(r.days);
   if(days === 0) return {base:'leave', reasons};
   if(days !== null){
     const a = num(r.attempts), v = num(r.vcita);
-    if(a !== null && a < MIN_ATTEMPTS * days && !stsCovers(r)) reasons.watch.push(`Call attempts ${a} of ${MIN_ATTEMPTS * days} expected (${days} days)`);
-    if(v !== null && v < MIN_VCITA * days) reasons.watch.push(`vCITA calls ${v} of ${MIN_VCITA * days} expected (${days} days)`);
+    if(a !== null && a < t.att * days && !stsCovers(r, adv)) reasons.watch.push(`Call attempts ${a} of ${t.att * days} expected (${days} days)`);
+    if(v !== null && v < t.vc * days) reasons.watch.push(`vCITA calls ${v} of ${t.vc * days} expected (${days} days)`);
   }
   ['att','con','t12'].forEach(k => { const v = num(r[k]); if(v !== null && v < KPI[k].floor) reasons.watch.push(`${KPI[k].label} ${v}% (below ${KPI[k].floor}%)`); });
   const missing = days === null || num(r.attempts) === null || num(r.vcita) === null;
@@ -443,9 +446,9 @@ const HEAD = p => `<thead><tr class="grp">
 </tr><tr class="cols">
   <th>Adviser</th>
   <th>Days<small>worked</small></th>
-  <th>Call attempts<small>min 15 a day</small></th>
-  <th>vCITA calls<small>min 10 a day</small></th>
-  <th>Total STS<small>38+ covers attempts</small></th>
+  <th>Call attempts<small>min ${tg(p).att} a day</small></th>
+  <th>vCITA calls<small>min ${tg(p).vc} a day</small></th>
+  <th>Total STS<small>${tg(p).sts}+ covers attempts</small></th>
   <th>Unique<small>contacts</small></th>
   <th>Contact rate<small>min 45%</small></th>
   <th>Attempted<small>60-day, min 80%</small></th>
@@ -459,8 +462,9 @@ function rowHtml(a, k, r, res, st, wk, i){
   const alt = (i % 2 ? ' alt' : '') + (num(r.days) === 0 ? ' leave' : '');
   const {status, base} = res;
   const days = num(r.days);
-  const expA = days ? MIN_ATTEMPTS * days : null, expV = days ? MIN_VCITA * days : null;
-  const shortA = expA !== null && num(r.attempts) !== null && num(r.attempts) < expA && !stsCovers(r);
+  const t = tg(a);
+  const expA = days ? Math.round(t.att * days) : null, expV = days ? Math.round(t.vc * days) : null;
+  const shortA = expA !== null && num(r.attempts) !== null && num(r.attempts) < expA && !stsCovers(r, a);
   const shortV = expV !== null && num(r.vcita) !== null && num(r.vcita) < expV;
   const kcls = f => { const t = tier(f, num(r[f])); return t ? 't-' + t : ''; };
   const kpi = f => `<span class="f"><input class="num ${kcls(f)}" type="text" inputmode="decimal" autocomplete="off" data-f="${f}" value="${esc(r[f])}"><span class="pct">%</span></span>`;
