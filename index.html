@@ -182,6 +182,48 @@ input.txt.need{border-color:var(--ovr);box-shadow:0 0 0 3px var(--ovr-bg)}
 .legend{display:flex;flex-wrap:wrap;gap:8px 22px;color:var(--muted);font-size:12px}
 .legend span{display:inline-flex;align-items:center;gap:8px}
 .sw{width:10px;height:10px;border-radius:3px;display:inline-block}
+.meetbtn b{background:#fff;color:var(--navy);border-radius:999px;font-size:11px;padding:1px 7px;margin-left:4px}
+.meetbtn b:empty{display:none}
+body.meet-open .meetbtn{background:var(--hero-glass-hover)}
+.meet{position:fixed;top:0;right:0;bottom:0;width:400px;max-width:100%;background:var(--panel);box-shadow:-10px 0 34px rgba(29,43,79,.16);z-index:30;display:flex;flex-direction:column;transform:translateX(105%);transition:transform .2s ease}
+.meet::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(180deg,var(--red),var(--orange),var(--yellow),var(--green),var(--blue))}
+body.meet-open .meet{transform:none}
+@media (min-width:1560px){body.meet-open{padding-right:400px}}
+.meet-head{padding:18px 18px 16px 23px;background:linear-gradient(120deg,var(--navy),var(--blue));color:#fff;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.meet-head h2{margin:0;font-size:18px;font-weight:700}
+.meet-head small{display:block;color:var(--hero-muted);font-size:12px}
+.meet-close{background:var(--hero-glass);border:0;color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer}
+.meet-close:hover{background:var(--hero-glass-hover)}
+.meet-body{overflow:auto;padding:16px 16px 48px 21px;display:grid;gap:20px;align-content:start;flex:1}
+.mwho{font-size:12px;color:var(--muted);background:var(--field);border-radius:8px;padding:8px 10px}
+.msec h3{margin:0 0 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+.msec h3::before{content:"";width:16px;height:4px;border-radius:2px;background:var(--mc)}
+.msec h3 span{font-weight:400;letter-spacing:0;text-transform:none;color:var(--faint)}
+.msec.tp{--mc:var(--blue)}.msec.q{--mc:var(--orange)}.msec.act{--mc:var(--green)}.msec.mn{--mc:var(--exc)}
+.mlist{display:grid;gap:6px}
+.mi{background:var(--field);border-radius:10px;padding:8px 10px;display:grid;gap:5px;border-left:3px solid var(--mc)}
+.mi.done{opacity:.6}
+.mi.done .mtext{text-decoration:line-through}
+.mtop{display:flex;gap:8px;align-items:flex-start}
+.mtop input{margin:2px 0 0;width:15px;height:15px;accent-color:var(--mc);flex:none;cursor:pointer}
+.mtext{flex:1;min-width:0;white-space:pre-wrap;font-size:13px;line-height:1.45}
+.mmeta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:11px;color:var(--faint)}
+.mtag{background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:0 8px}
+.mown{background:var(--ok-bg);color:var(--ok);border-radius:999px;padding:0 8px;font-weight:600}
+.mdel{margin-left:auto;background:none;border:0;color:var(--faint);cursor:pointer;font-size:11px;padding:1px 6px;border-radius:6px;opacity:0}
+.mi:hover .mdel,.mdel:focus{opacity:1}
+.mdel:hover{color:var(--flag);background:var(--flag-bg)}
+.mans{width:100%;font-size:12px;background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 8px}
+.mempty{font-size:12px;color:var(--faint)}
+.madd{display:grid;gap:6px;margin-top:8px}
+.madd textarea{min-height:32px;font-size:13px;background:var(--field)}
+.madd .mrow{display:flex;gap:6px}
+.madd select{flex:1;min-width:0;font-size:12px;padding:5px 6px}
+.madd button{background:var(--mc);color:#fff;border:0;border-radius:7px;padding:5px 14px;font-weight:600;cursor:pointer;font-size:12px;flex:none}
+.madd button:hover{filter:brightness(.92)}
+.tagged{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.tchip{font-size:11px;background:var(--ovr-bg);color:var(--ovr);border:0;border-radius:999px;padding:2px 10px;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tchip:hover{filter:brightness(.95)}
 @media (max-width:720px){.alert{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}h1{font-size:22px}.detailgrid{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -207,6 +249,7 @@ input.txt.need{border-color:var(--ovr);box-shadow:0 0 0 3px var(--ovr-bg)}
       <label class="me">Commenting as
         <select id="me"><option value="">Choose name</option></select>
       </label>
+      <button class="glass meetbtn" id="meetbtn" aria-label="Open 1:1 panel">1:1<b id="meetcount"></b></button>
       <span class="save" id="save"></span>
     </div>
   </div>
@@ -232,9 +275,24 @@ input.txt.need{border-color:var(--ovr);box-shadow:0 0 0 3px var(--ovr-bg)}
   </div>
 </div>
 
+<aside class="meet" id="meet" aria-label="1:1 with Carms">
+  <div class="meet-head"><div><h2>1:1</h2><small id="meetweek"></small></div><button class="meet-close" id="meetclose">Close</button></div>
+  <div class="meet-body" id="meetbody"></div>
+</aside>
+
 <script>
 const ROOT = 'https://unsw-team-calendar-default-rtdb.asia-southeast1.firebasedatabase.app';
 const DB = ROOT + '/weekly_kpi', DBC = ROOT + '/weekly_kpi_comments';
+const DBM = ROOT + '/weekly_1on1';
+const MTYPES = [
+  {id:'tp', label:'Talking points', one:'Talking point', add:'Add a talking point', tick:'Discussed'},
+  {id:'q', label:'Questions', one:'Question', add:'Ask a question'},
+  {id:'act', label:'Actions', one:'Action', add:'Add an action', tick:'Done'},
+  {id:'mn', label:'Meeting notes', one:'Note', add:'Add a note from the catch-up'}
+];
+let meet = {};
+const mdrafts = {};
+let mDirty = false;
 const MANAGERS = [{name:'Greg Banks', colour:'var(--blue)'}, {name:'Carmela Gomez', colour:'var(--red)'}];
 const PARTNERS = [
   {id:'unsw', book:'UNSW', name:'UNSW Online'},
@@ -340,8 +398,8 @@ async function load(quiet){
   if(store){ render(); return; }
   if(!quiet) setSave('Loading...');
   try{
-    const [r, c] = await Promise.all([fetch(DB + '.json', {cache:'no-store'}), fetch(DBC + '.json', {cache:'no-store'})]);
-    if(!r.ok || !c.ok) throw new Error('load');
+    const [r, c, m] = await Promise.all([fetch(DB + '.json', {cache:'no-store'}), fetch(DBC + '.json', {cache:'no-store'}), fetch(DBM + '.json', {cache:'no-store'})]);
+    if(!r.ok || !c.ok || !m.ok) throw new Error('load');
     const next = (await r.json()) || {};
     pending.forEach(id => { const [wk, k] = id.split('|'); if(all[wk] && all[wk][k]) (next[wk] = next[wk] || {})[k] = all[wk][k]; });
     all = next;
@@ -352,6 +410,7 @@ async function load(quiet){
       cm[wk][k] = Object.entries(raw[wk][k] || {}).map(([id, v]) => Object.assign({id}, v));
     }));
     comments = cm;
+    meet = (await m.json()) || {};
     if(!quiet) setSave('');
   }catch(e){ setSave('Could not load', true); }
   refresh();
@@ -488,7 +547,7 @@ function rowHtml(a, k, r, res, st, wk, i){
     <td><span class="pill ${status}">${LABEL[status]}</span>${sub ? `<span class="streak">${sub}</span>` : ''}</td>
     <td><label class="planbox"><input type="checkbox" data-f="plan" ${r.plan ? 'checked' : ''}> Needed</label></td>
   </tr>
-  <tr class="detail${alt}" data-row="${k}"><td></td><td colspan="9" class="notescell"><div class="thread">
+  <tr class="detail${alt}" data-row="${k}"><td></td><td colspan="9" class="notescell">${taggedHtml(wk, k)}<div class="thread">
       ${r.notes ? `<div class="cm legacy"><span class="av" style="--av:var(--faint)">N</span><div class="cline"><b>Earlier note</b><span class="cmt">${esc(r.notes)}</span></div><button class="cdel" data-clearnote="1" aria-label="Remove note">Remove</button></div>` : ''}
       ${list.map(c => `<div class="cm"><span class="av" style="--av:${avColour(c.by)}">${esc(initials(c.by))}</span><div class="cline"><b>${esc(c.by)}</b><span class="when">${esc(when(c.at))}</span><span class="cmt">${esc(c.text)}</span></div>${c.by === me ? `<button class="cdel" data-del="${esc(c.id)}" aria-label="Remove note">Remove</button>` : ''}</div>`).join('')}
       <div class="cnew"><input class="txt" type="text" data-f="cdraft" placeholder="${me ? 'Add a note, risk or action' : 'Choose your name at the top to add notes'}" value="${esc(drafts[k] || '')}"><button class="cpost ${(drafts[k] || '').trim() ? 'has' : ''}" data-post="${k}">Post</button></div>
@@ -519,6 +578,7 @@ function bind(sec){
   sec.querySelectorAll('[data-toggle]').forEach(b => b.onclick = () => { const k = b.dataset.toggle; openC.has(k) ? openC.delete(k) : openC.add(k); if(openC.has(k)) focusNext = {k, f:'cdraft'}; render(); });
   sec.querySelectorAll('[data-post]').forEach(b => b.onclick = () => postComment(b.dataset.post));
   sec.querySelectorAll('[data-clearnote]').forEach(b => b.onclick = () => { const k = b.closest('tr').dataset.row, wk = iso(week); all[wk][k].notes = ''; pending.add(wk + '|' + k); setSave('Saving...'); persist(wk, k); render(); });
+  sec.querySelectorAll('[data-openmeet]').forEach(b => b.onclick = () => openMeet(true));
   sec.querySelectorAll('[data-del]').forEach(b => b.onclick = () => deleteComment(b.closest('tr').dataset.row, b.dataset.del));
 }
 
@@ -585,6 +645,7 @@ function render(){
       : '<div class="empty">Nobody is below expectation this week.</div>';
 
 
+  renderMeet();
   if(keep){ const el = partnersEl.querySelector(`[data-k="${keep.k}"][data-f="${keep.f}"]`); if(el){ el.focus(); if(keep.s != null && el.setSelectionRange){ try{ el.setSelectionRange(keep.s, keep.e); }catch(x){} } } }
 }
 
@@ -681,6 +742,102 @@ document.getElementById('refresh').onclick = () => load();
 document.getElementById('weekpick').onchange = e => { if(e.target.value){ const [y,m,d] = e.target.value.split('-').map(Number); go(new Date(y, m-1, d)); } };
 document.getElementById('partners').addEventListener('focusout', () => setTimeout(() => { if(dirty && !typing()){ dirty = false; render(); } }, 0));
 
+function meetItems(wk){ return Object.entries(meet[wk] || {}).map(([id, v]) => Object.assign({id}, v)).sort((x, y) => String(x.at).localeCompare(String(y.at))); }
+function inMeet(){ const a = document.activeElement; return !!(a && a.closest && a.closest('#meet') && (a.tagName === 'TEXTAREA' || a.tagName === 'INPUT' || a.tagName === 'SELECT')); }
+function taggedHtml(wk, k){
+  const list = meetItems(wk).filter(i => i.adviser === k);
+  if(!list.length) return '';
+  const one = id => (MTYPES.find(t => t.id === id) || {}).one || '1:1';
+  return `<div class="tagged">${list.map(i => `<button class="tchip" data-openmeet="1" title="${esc(i.text)}">1:1 ${esc(one(i.type))}: ${esc(i.text.length > 60 ? i.text.slice(0, 60) + '...' : i.text)}</button>`).join('')}</div>`;
+}
+function meetItemHtml(i, t){
+  const adv = i.adviser ? ADVISERS.find(a => key(a.name) === i.adviser) : null;
+  const chk = t.tick ? `<input type="checkbox" data-mdone="${esc(i.id)}" ${i.done ? 'checked' : ''} title="${t.tick}" aria-label="${t.tick}">` : '';
+  const ans = t.id === 'q' ? `<input class="mans" type="text" data-mans="${esc(i.id)}" placeholder="Answer" value="${esc(i.answer || '')}">` : '';
+  return `<div class="mi ${i.done ? 'done' : ''}"><div class="mtop">${chk}<div class="mtext">${esc(i.text)}</div></div>${ans}
+    <div class="mmeta">${t.id === 'act' && i.owner ? `<span class="mown">${esc(i.owner.split(' ')[0])}</span>` : ''}${adv ? `<span class="mtag">${esc(adv.name)}</span>` : ''}<span>${esc(String(i.by || '').split(' ')[0])} &middot; ${esc(when(i.at))}</span>${i.by === me ? `<button class="mdel" data-mdel="${esc(i.id)}">Remove</button>` : ''}</div></div>`;
+}
+function renderMeet(){
+  const wk = iso(week);
+  const items = meetItems(wk);
+  document.getElementById('meetcount').textContent = items.length || '';
+  document.getElementById('meetweek').textContent = 'With Carms, week of ' + fmt(week);
+  if(inMeet()){ mDirty = true; return; }
+  const advOpts = '<option value="">No adviser</option>' + ADVISERS.map(a => `<option value="${key(a.name)}">${esc(a.name)}</option>`).join('');
+  const body = document.getElementById('meetbody');
+  body.innerHTML = (me ? '' : '<div class="mwho">Choose your name in "Commenting as" at the top to add items.</div>') + MTYPES.map(t => {
+    const list = items.filter(i => i.type === t.id);
+    const d = mdrafts[t.id] || {};
+    const open = t.tick ? list.filter(i => !i.done).length : list.length;
+    return `<section class="msec ${t.id}"><h3>${t.label}${list.length ? ` <span>${t.tick ? open + ' open of ' + list.length : list.length}</span>` : ''}</h3>
+      <div class="mlist">${list.length ? list.map(i => meetItemHtml(i, t)).join('') : '<div class="mempty">Nothing yet this week</div>'}</div>
+      <div class="madd" data-type="${t.id}">
+        <textarea rows="1" class="mnew" placeholder="${t.add}">${esc(d.text || '')}</textarea>
+        <div class="mrow"><select class="madv" aria-label="Adviser">${advOpts}</select>${t.id === 'act' ? `<select class="mowner" aria-label="Owner"><option value="">Owner</option>${MANAGERS.map(m => `<option value="${m.name}">${m.name}</option>`).join('')}</select>` : ''}<button class="madd-btn">Add</button></div>
+      </div></section>`;
+  }).join('');
+  body.querySelectorAll('.madd').forEach(box => {
+    const type = box.dataset.type, d = mdrafts[type] = mdrafts[type] || {};
+    const ta = box.querySelector('.mnew'), adv = box.querySelector('.madv'), own = box.querySelector('.mowner');
+    adv.value = d.adv || ''; if(own) own.value = d.owner || '';
+    fit(ta);
+    ta.addEventListener('input', () => { d.text = ta.value; fit(ta); });
+    ta.addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); meetAdd(type); } });
+    adv.addEventListener('change', () => { d.adv = adv.value; });
+    if(own) own.addEventListener('change', () => { d.owner = own.value; });
+    box.querySelector('.madd-btn').onclick = () => meetAdd(type);
+  });
+  body.querySelectorAll('[data-mdone]').forEach(c => c.onchange = () => meetPatch(c.dataset.mdone, {done:c.checked}));
+  body.querySelectorAll('[data-mans]').forEach(inp => inp.addEventListener('change', () => meetPatch(inp.dataset.mans, {answer:inp.value, answeredBy:me || ''})));
+  body.querySelectorAll('[data-mdel]').forEach(b => b.onclick = () => meetDelete(b.dataset.mdel));
+}
+async function meetAdd(type){
+  const wk = iso(week), d = mdrafts[type] || {};
+  const text = String(d.text || '').trim();
+  if(!text) return;
+  if(!me){ setSave('Choose your name first', true); document.getElementById('me').focus(); return; }
+  const item = {type, text, by:me, at:new Date().toISOString()};
+  if(d.adv) item.adviser = d.adv;
+  if(type === 'act' && d.owner) item.owner = d.owner;
+  try{
+    const r = await fetch(`${DBM}/${wk}.json`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(item)});
+    if(!r.ok) throw new Error(r.status);
+    const {name} = await r.json();
+    (meet[wk] = meet[wk] || {})[name] = item;
+    mdrafts[type] = {};
+    setSave('Added');
+    if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    render();
+  }catch(e){ setSave('Not added', true); }
+}
+async function meetPatch(id, patch){
+  const wk = iso(week);
+  try{
+    const r = await fetch(`${DBM}/${wk}/${id}.json`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(patch)});
+    if(!r.ok) throw new Error(r.status);
+    Object.assign(meet[wk][id], patch);
+    setSave('Saved');
+    if(!('answer' in patch)) render();
+  }catch(e){ setSave('Not saved', true); }
+}
+async function meetDelete(id){
+  const wk = iso(week);
+  try{
+    const r = await fetch(`${DBM}/${wk}/${id}.json`, {method:'DELETE'});
+    if(!r.ok) throw new Error(r.status);
+    delete meet[wk][id];
+    setSave('Removed');
+    render();
+  }catch(e){ setSave('Could not remove', true); }
+}
+function openMeet(open){
+  document.body.classList.toggle('meet-open', open);
+  try{ localStorage.setItem('podc_meet_open', open ? '1' : ''); }catch(e){}
+}
+document.getElementById('meetbtn').onclick = () => openMeet(!document.body.classList.contains('meet-open'));
+document.getElementById('meetclose').onclick = () => openMeet(false);
+document.getElementById('meet').addEventListener('focusout', () => setTimeout(() => { if(mDirty && !inMeet()){ mDirty = false; renderMeet(); } }, 0));
+try{ if(localStorage.getItem('podc_meet_open')) openMeet(true); }catch(e){}
 init();
 </script>
 </body>
