@@ -224,6 +224,16 @@ body.meet-open .meet{transform:none}
 .tagged{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
 .tchip{font-size:11px;background:var(--ovr-bg);color:var(--ovr);border:0;border-radius:999px;padding:2px 10px;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tchip:hover{filter:brightness(.95)}
+.msec.rr{--mc:var(--red)}
+.rbox{display:grid;gap:4px;margin-bottom:10px}
+.rbox label{font-size:12px;font-weight:600;color:var(--ink)}
+.rbox textarea{min-height:56px;font-size:13px;background:var(--field)}
+.rmeta{font-size:11px;color:var(--faint)}
+.rprev{margin-top:4px;border-top:1px dashed var(--line);padding-top:10px;display:grid;gap:8px}
+.rprev h4{margin:0;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.rprev .ritem{background:var(--field);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--muted)}
+.rprev .ritem b{display:block;color:var(--ink);font-size:11px;margin-bottom:2px}
+.rprev .ritem div{white-space:pre-wrap}
 @media (max-width:720px){.alert{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}h1{font-size:22px}.detailgrid{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -293,6 +303,45 @@ const MTYPES = [
 let meet = {};
 const mdrafts = {};
 let mDirty = false;
+const DBR = ROOT + '/weekly_risk';
+const RHEADS = [
+  {f:'risks', label:'Key risks this week'},
+  {f:'mitigation', label:'What we\'re doing about it'},
+  {f:'escalate', label:'Escalations or support needed'}
+];
+let risk = {};
+const rTimers = {};
+function riskHtml(){
+  const wk = iso(week), pw = iso(addDays(week, -7));
+  const cur = risk[wk] || {}, prev = risk[pw] || {};
+  const boxes = RHEADS.map(h => `<div class="rbox"><label for="r_${h.f}">${h.label}</label><textarea id="r_${h.f}" rows="2" data-risk="${h.f}" placeholder="Free text">${esc(cur[h.f] || '')}</textarea></div>`).join('');
+  const meta = cur.updatedBy ? `<div class="rmeta">Last edited by ${esc(String(cur.updatedBy).split(' ')[0])}, ${esc(when(cur.updatedAt))}</div>` : '';
+  const prevItems = RHEADS.filter(h => String(prev[h.f] || '').trim()).map(h => `<div class="ritem"><b>${h.label}</b><div>${esc(prev[h.f])}</div></div>`).join('');
+  const prevHtml = `<div class="rprev"><h4>Last week, ${esc(fmt(addDays(week, -7)))}</h4>${prevItems || '<div class="mempty">No risk review saved for last week</div>'}</div>`;
+  return `<section class="msec rr"><h3>Friday risk review</h3>${boxes}${meta}${prevHtml}</section>`;
+}
+function bindRisk(body){
+  body.querySelectorAll('[data-risk]').forEach(ta => {
+    fit(ta);
+    ta.addEventListener('input', () => {
+      fit(ta);
+      const wk = iso(week), f = ta.dataset.risk;
+      const r = risk[wk] = risk[wk] || {};
+      r[f] = ta.value;
+      setSave('Saving...');
+      clearTimeout(rTimers[wk + f]);
+      rTimers[wk + f] = setTimeout(async () => {
+        const patch = {[f]:r[f], updatedBy:me || '', updatedAt:new Date().toISOString()};
+        try{
+          const res = await fetch(`${DBR}/${wk}.json`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(patch)});
+          if(!res.ok) throw new Error(res.status);
+          Object.assign(r, patch);
+          setSave('Saved');
+        }catch(e){ setSave('Not saved', true); }
+      }, 700);
+    });
+  });
+}
 const MANAGERS = [{name:'Greg Banks', colour:'var(--blue)'}, {name:'Carmela Gomez', colour:'var(--red)'}];
 const PARTNERS = [
   {id:'unsw', book:'UNSW', name:'UNSW Online'},
@@ -350,7 +399,7 @@ const pending = new Set();
 const chains = {};
 let dirty = false;
 
-function typing(){ const a = document.activeElement; return !!(a && a.dataset && a.dataset.k && (a.tagName === 'TEXTAREA' || a.type === 'number' || a.type === 'text')); }
+function typing(){ if(inMeet()) return true; const a = document.activeElement; return !!(a && a.dataset && a.dataset.k && (a.tagName === 'TEXTAREA' || a.type === 'number' || a.type === 'text')); }
 function refresh(){ if(typing()) dirty = true; else render(); }
 
 async function init(){
@@ -398,8 +447,8 @@ async function load(quiet){
   if(store){ render(); return; }
   if(!quiet) setSave('Loading...');
   try{
-    const [r, c, m] = await Promise.all([fetch(DB + '.json', {cache:'no-store'}), fetch(DBC + '.json', {cache:'no-store'}), fetch(DBM + '.json', {cache:'no-store'})]);
-    if(!r.ok || !c.ok || !m.ok) throw new Error('load');
+    const [r, c, m, rk] = await Promise.all([fetch(DB + '.json', {cache:'no-store'}), fetch(DBC + '.json', {cache:'no-store'}), fetch(DBM + '.json', {cache:'no-store'}), fetch(DBR + '.json', {cache:'no-store'})]);
+    if(!r.ok || !c.ok || !m.ok || !rk.ok) throw new Error('load');
     const next = (await r.json()) || {};
     pending.forEach(id => { const [wk, k] = id.split('|'); if(all[wk] && all[wk][k]) (next[wk] = next[wk] || {})[k] = all[wk][k]; });
     all = next;
@@ -411,6 +460,7 @@ async function load(quiet){
     }));
     comments = cm;
     meet = (await m.json()) || {};
+    risk = (await rk.json()) || {};
     if(!quiet) setSave('');
   }catch(e){ setSave('Could not load', true); }
   refresh();
@@ -765,7 +815,7 @@ function renderMeet(){
   if(inMeet()){ mDirty = true; return; }
   const advOpts = '<option value="">No adviser</option>' + ADVISERS.map(a => `<option value="${key(a.name)}">${esc(a.name)}</option>`).join('');
   const body = document.getElementById('meetbody');
-  body.innerHTML = (me ? '' : '<div class="mwho">Choose your name in "Commenting as" at the top to add items.</div>') + MTYPES.map(t => {
+  body.innerHTML = (me ? '' : '<div class="mwho">Choose your name in "Commenting as" at the top to add items.</div>') + riskHtml() + MTYPES.map(t => {
     const list = items.filter(i => i.type === t.id);
     const d = mdrafts[t.id] || {};
     const open = t.tick ? list.filter(i => !i.done).length : list.length;
@@ -776,6 +826,7 @@ function renderMeet(){
         <div class="mrow"><select class="madv" aria-label="Adviser">${advOpts}</select>${t.id === 'act' ? `<select class="mowner" aria-label="Owner"><option value="">Owner</option>${MANAGERS.map(m => `<option value="${m.name}">${m.name}</option>`).join('')}</select>` : ''}<button class="madd-btn">Add</button></div>
       </div></section>`;
   }).join('');
+  bindRisk(body);
   body.querySelectorAll('.madd').forEach(box => {
     const type = box.dataset.type, d = mdrafts[type] = mdrafts[type] || {};
     const ta = box.querySelector('.mnew'), adv = box.querySelector('.madv'), own = box.querySelector('.mowner');
