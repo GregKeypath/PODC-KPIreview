@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pod C Weekly KPIs</title>
+<title>Pod C 1:1 Hub</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -182,19 +182,40 @@ input.txt.need{border-color:var(--ovr);box-shadow:0 0 0 3px var(--ovr-bg)}
 .legend{display:flex;flex-wrap:wrap;gap:8px 22px;color:var(--muted);font-size:12px}
 .legend span{display:inline-flex;align-items:center;gap:8px}
 .sw{width:10px;height:10px;border-radius:3px;display:inline-block}
-.meetbtn b{background:#fff;color:var(--navy);border-radius:999px;font-size:11px;padding:1px 7px;margin-left:4px}
-.meetbtn b:empty{display:none}
-body.meet-open .meetbtn{background:var(--hero-glass-hover)}
-.meet{position:fixed;top:0;right:0;bottom:0;width:400px;max-width:100%;background:var(--panel);box-shadow:-10px 0 34px rgba(29,43,79,.16);z-index:30;display:flex;flex-direction:column;transform:translateX(105%);transition:transform .2s ease}
-.meet::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(180deg,var(--red),var(--orange),var(--yellow),var(--green),var(--blue))}
-body.meet-open .meet{transform:none}
-@media (min-width:1560px){body.meet-open{padding-right:400px}}
-.meet-head{padding:18px 18px 16px 23px;background:linear-gradient(120deg,var(--navy),var(--blue));color:#fff;display:flex;align-items:center;justify-content:space-between;gap:10px}
-.meet-head h2{margin:0;font-size:18px;font-weight:700}
-.meet-head small{display:block;color:var(--hero-muted);font-size:12px}
-.meet-close{background:var(--hero-glass);border:0;color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer}
-.meet-close:hover{background:var(--hero-glass-hover)}
-.meet-body{overflow:auto;padding:16px 16px 48px 21px;display:grid;gap:20px;align-content:start;flex:1}
+[hidden]{display:none!important}
+.burger{background:var(--hero-glass);border:0;color:var(--hero-ink);width:42px;height:42px;border-radius:10px;cursor:pointer;font-size:20px;line-height:1;display:grid;place-items:center;flex:none}
+.burger:hover{background:var(--hero-glass-hover)}
+.shell{display:flex;align-items:flex-start}
+.side{position:sticky;top:0;height:100vh;width:240px;flex:none;background:var(--panel);border-right:1px solid var(--line);padding:22px 12px;display:flex;flex-direction:column;gap:2px;overflow:auto;transition:margin-left .2s ease,transform .2s ease}
+body.side-closed .side{margin-left:-240px}
+.side-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:16px 12px 6px;font-weight:600}
+.side-label:first-child{margin-top:0}
+.navi{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--ink);border:0;background:none;cursor:pointer;width:100%;text-align:left;font-weight:500}
+.navi i{width:10px;height:10px;border-radius:3px;background:var(--nc);flex:none}
+.navi:hover{background:var(--field)}
+.navi.on{background:var(--field);box-shadow:inset 3px 0 0 var(--nc);font-weight:600}
+.navi b{margin-left:auto;font-size:11px;font-weight:600;background:var(--nc);color:#fff;border-radius:999px;padding:1px 8px}
+.navi b:empty{display:none}
+.main{flex:1;min-width:0}
+.mview{max-width:880px;margin:0 auto;padding:32px 24px 64px;display:grid;gap:16px;align-content:start}
+.mview.tp{--mc:var(--blue)}.mview.q{--mc:var(--orange)}.mview.act{--mc:var(--green)}.mview.mn{--mc:var(--exc)}.mview.rr{--mc:var(--red)}
+.vhead{display:grid;gap:4px;margin-bottom:4px}
+.vhead h2{margin:0;font-size:24px;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:12px}
+.vhead h2::before{content:"";width:6px;height:26px;border-radius:3px;background:var(--mc)}
+.vhead p{margin:0;color:var(--muted)}
+.mwho{font-size:13px;color:var(--muted);background:var(--watch-bg);border-radius:10px;padding:10px 14px}
+.mview .mlist{gap:8px}
+.mview .mi{padding:12px 14px;background:var(--panel);box-shadow:var(--shadow)}
+.mview .mtext{font-size:14px}
+.mview .mmeta{font-size:12px}
+.mview .madd{background:var(--panel);box-shadow:var(--shadow);border-radius:12px;padding:12px;margin-top:4px;border-top:3px solid var(--mc)}
+.mview .madd textarea{font-size:14px}
+.mview .rbox{background:var(--panel);box-shadow:var(--shadow);border-radius:12px;padding:12px 14px;border-top:3px solid var(--mc);margin:0}
+.mview .rbox label{font-size:14px}
+.mview .rbox textarea{min-height:80px;font-size:14px}
+.mview .rprev{border-top:0;padding-top:6px}
+.mview .rprev .ritem{font-size:13px;padding:10px 14px}
+@media (max-width:900px){.side{position:fixed;z-index:40;left:0;top:0;box-shadow:0 10px 34px rgba(29,43,79,.2)} body.side-closed .side{margin-left:0;transform:translateX(-105%)}}
 .mwho{font-size:12px;color:var(--muted);background:var(--field);border-radius:8px;padding:8px 10px}
 .msec h3{margin:0 0 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
 .msec h3::before{content:"";width:16px;height:4px;border-radius:2px;background:var(--mc)}
@@ -241,11 +262,11 @@ body.meet-open .meet{transform:none}
 <body>
 <header class="hero">
   <div class="heroin">
-    <div class="brand">
+    <div class="brand"><button class="burger" id="burger" aria-label="Show or hide menu">&#9776;</button>
       <svg viewBox="0 0 512 512" aria-hidden="true"><path d="M256 256L256 0A256 256 0 0 1 437 75Z" fill="#f8e46a"/><path d="M256 256L437 75A256 256 0 0 1 512 256Z" fill="#3cd39a"/><path d="M256 256L512 256A256 256 0 0 1 384 477.7Z" fill="#4a7bd8"/><path d="M256 256L384 477.7A256 256 0 0 1 0 256Z" fill="#0b5cb0"/><path d="M256 256L0 256A256 256 0 0 1 75 75Z" fill="#fc4a62"/><path d="M256 256L75 75A256 256 0 0 1 189.7 8.7Z" fill="#fd9a5a"/><path d="M256 256L189.7 8.7A256 256 0 0 1 256 0Z" fill="#fdbe74"/><circle cx="256" cy="256" r="168" fill="#e9e8fc"/><polyline points="205,200 255,250 382,124" fill="none" stroke="#4a76d6" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/><text x="256" y="350" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="96" letter-spacing="6" fill="#4a76d6">KPI</text></svg>
       <div>
         <p class="eyebrow">Pod C &middot; Student Success</p>
-        <h1>Weekly KPI review</h1>
+        <h1>Weekly 1:1</h1>
       </div>
     </div>
     <div class="controls">
@@ -259,13 +280,30 @@ body.meet-open .meet{transform:none}
       <label class="me">Commenting as
         <select id="me"><option value="">Choose name</option></select>
       </label>
-      <button class="glass meetbtn" id="meetbtn" aria-label="Open 1:1 panel">1:1<b id="meetcount"></b></button>
       <span class="save" id="save"></span>
     </div>
   </div>
 </header>
 
-<div class="wrap">
+<div class="shell">
+  <nav class="side" id="side" aria-label="Sections">
+    <p class="side-label">1:1 catch-up</p>
+    <button class="navi" data-go="tp" style="--nc:var(--blue)"><i></i>Talking points<b></b></button>
+    <button class="navi" data-go="q" style="--nc:var(--orange)"><i></i>Questions<b></b></button>
+    <button class="navi" data-go="act" style="--nc:var(--green)"><i></i>Actions<b></b></button>
+    <button class="navi" data-go="mn" style="--nc:var(--exc)"><i></i>Meeting notes<b></b></button>
+    <p class="side-label">Friday</p>
+    <button class="navi" data-go="risk" style="--nc:var(--red)"><i></i>Risk review<b></b></button>
+    <p class="side-label">Performance</p>
+    <button class="navi" data-go="kpi" style="--nc:var(--navy)"><i></i>KPI review<b></b></button>
+  </nav>
+  <main class="main">
+    <section class="mview msec tp" id="view-tp" data-view="tp"></section>
+    <section class="mview msec q" id="view-q" data-view="q" hidden></section>
+    <section class="mview msec act" id="view-act" data-view="act" hidden></section>
+    <section class="mview msec mn" id="view-mn" data-view="mn" hidden></section>
+    <section class="mview msec rr" id="view-risk" data-view="risk" hidden></section>
+<div class="wrap" id="view-kpi" data-view="kpi" hidden>
   <section class="overview" id="overview"></section>
 
   <section>
@@ -284,11 +322,9 @@ body.meet-open .meet{transform:none}
     <span><i class="sw" style="background:var(--faint)"></i>Contact rate is for information only</span>
   </div>
 </div>
+  </main>
+</div>
 
-<aside class="meet" id="meet" aria-label="1:1 with Carms">
-  <div class="meet-head"><div><h2>1:1</h2><small id="meetweek"></small></div><button class="meet-close" id="meetclose">Close</button></div>
-  <div class="meet-body" id="meetbody"></div>
-</aside>
 
 <script>
 const ROOT = 'https://unsw-team-calendar-default-rtdb.asia-southeast1.firebasedatabase.app';
@@ -318,7 +354,7 @@ function riskHtml(){
   const meta = cur.updatedBy ? `<div class="rmeta">Last edited by ${esc(String(cur.updatedBy).split(' ')[0])}, ${esc(when(cur.updatedAt))}</div>` : '';
   const prevItems = RHEADS.filter(h => String(prev[h.f] || '').trim()).map(h => `<div class="ritem"><b>${h.label}</b><div>${esc(prev[h.f])}</div></div>`).join('');
   const prevHtml = `<div class="rprev"><h4>Last week, ${esc(fmt(addDays(week, -7)))}</h4>${prevItems || '<div class="mempty">No risk review saved for last week</div>'}</div>`;
-  return `<section class="msec rr"><h3>Friday risk review</h3>${boxes}${meta}${prevHtml}</section>`;
+  return `<section style="display:grid;gap:12px">${boxes}${meta}${prevHtml}</section>`;
 }
 function bindRisk(body){
   body.querySelectorAll('[data-risk]').forEach(ta => {
@@ -628,7 +664,7 @@ function bind(sec){
   sec.querySelectorAll('[data-toggle]').forEach(b => b.onclick = () => { const k = b.dataset.toggle; openC.has(k) ? openC.delete(k) : openC.add(k); if(openC.has(k)) focusNext = {k, f:'cdraft'}; render(); });
   sec.querySelectorAll('[data-post]').forEach(b => b.onclick = () => postComment(b.dataset.post));
   sec.querySelectorAll('[data-clearnote]').forEach(b => b.onclick = () => { const k = b.closest('tr').dataset.row, wk = iso(week); all[wk][k].notes = ''; pending.add(wk + '|' + k); setSave('Saving...'); persist(wk, k); render(); });
-  sec.querySelectorAll('[data-openmeet]').forEach(b => b.onclick = () => openMeet(true));
+  sec.querySelectorAll('[data-openmeet]').forEach(b => b.onclick = () => setView(b.dataset.go));
   sec.querySelectorAll('[data-del]').forEach(b => b.onclick = () => deleteComment(b.closest('tr').dataset.row, b.dataset.del));
 }
 
@@ -684,6 +720,7 @@ function render(){
 
   const metaLine = parts => { const s = parts.filter(Boolean).join(' &middot; '); return s ? `<div class="meta">${s}</div>` : ''; };
   alerts.sort((x, y) => (x.res.status === 'flag' ? 0 : 1) - (y.res.status === 'flag' ? 0 : 1) || PARTNERS.indexOf(x.p) - PARTNERS.indexOf(y.p));
+  document.querySelector('.navi[data-go="kpi"] b').textContent = alerts.length || '';
   document.getElementById('alerts').innerHTML = alerts.length
     ? alerts.map(x => `<div class="alert ${x.res.status}">
         <div class="who">${esc(x.a.name)}<span class="chip ${x.p.id}">${x.p.book}</span></div>
@@ -793,12 +830,12 @@ document.getElementById('weekpick').onchange = e => { if(e.target.value){ const 
 document.getElementById('partners').addEventListener('focusout', () => setTimeout(() => { if(dirty && !typing()){ dirty = false; render(); } }, 0));
 
 function meetItems(wk){ return Object.entries(meet[wk] || {}).map(([id, v]) => Object.assign({id}, v)).sort((x, y) => String(x.at).localeCompare(String(y.at))); }
-function inMeet(){ const a = document.activeElement; return !!(a && a.closest && a.closest('#meet') && (a.tagName === 'TEXTAREA' || a.tagName === 'INPUT' || a.tagName === 'SELECT')); }
+function inMeet(){ const a = document.activeElement; return !!(a && a.closest && a.closest('.mview') && (a.tagName === 'TEXTAREA' || a.tagName === 'INPUT' || a.tagName === 'SELECT')); }
 function taggedHtml(wk, k){
   const list = meetItems(wk).filter(i => i.adviser === k);
   if(!list.length) return '';
   const one = id => (MTYPES.find(t => t.id === id) || {}).one || '1:1';
-  return `<div class="tagged">${list.map(i => `<button class="tchip" data-openmeet="1" title="${esc(i.text)}">1:1 ${esc(one(i.type))}: ${esc(i.text.length > 60 ? i.text.slice(0, 60) + '...' : i.text)}</button>`).join('')}</div>`;
+  return `<div class="tagged">${list.map(i => `<button class="tchip" data-openmeet="1" data-go="${i.type}" title="${esc(i.text)}">1:1 ${esc(one(i.type))}: ${esc(i.text.length > 60 ? i.text.slice(0, 60) + '...' : i.text)}</button>`).join('')}</div>`;
 }
 function meetItemHtml(i, t){
   const adv = i.adviser ? ADVISERS.find(a => key(a.name) === i.adviser) : null;
@@ -807,26 +844,46 @@ function meetItemHtml(i, t){
   return `<div class="mi ${i.done ? 'done' : ''}"><div class="mtop">${chk}<div class="mtext">${esc(i.text)}</div></div>${ans}
     <div class="mmeta">${t.id === 'act' && i.owner ? `<span class="mown">${esc(i.owner.split(' ')[0])}</span>` : ''}${adv ? `<span class="mtag">${esc(adv.name)}</span>` : ''}<span>${esc(String(i.by || '').split(' ')[0])} &middot; ${esc(when(i.at))}</span>${i.by === me ? `<button class="mdel" data-mdel="${esc(i.id)}">Remove</button>` : ''}</div></div>`;
 }
+const DESC = {
+  tp:'Things either of us wants to raise.',
+  q:'Questions for each other, with the answer recorded.',
+  act:'Agreed actions, each with an owner.',
+  mn:'Notes from the catch-up.',
+  risk:'Presented on Friday. Free text, with last week underneath for comparison.'
+};
+let view = 'tp';
+try{ const v = localStorage.getItem('podc_view'); if(v && document.querySelector(`[data-view="${v}"]`)) view = v; }catch(e){}
+function vhead(title, d){ return `<div class="vhead"><h2>${title}</h2><p>${d} Week of ${esc(fmt(week))}.</p></div>`; }
 function renderMeet(){
   const wk = iso(week);
   const items = meetItems(wk);
-  document.getElementById('meetcount').textContent = items.length || '';
-  document.getElementById('meetweek').textContent = 'With Carms, week of ' + fmt(week);
+  MTYPES.forEach(t => {
+    const list = items.filter(i => i.type === t.id);
+    const n = t.tick ? list.filter(i => !i.done).length : list.length;
+    document.querySelector(`.navi[data-go="${t.id}"] b`).textContent = n || '';
+  });
+  const rcur = risk[wk] || {};
+  document.querySelector('.navi[data-go="risk"] b').textContent = RHEADS.some(h => String(rcur[h.f] || '').trim()) ? '✓' : '';
   if(inMeet()){ mDirty = true; return; }
+  const who = me ? '' : '<div class="mwho">Choose your name in "Commenting as" at the top before adding anything.</div>';
   const advOpts = '<option value="">No adviser</option>' + ADVISERS.map(a => `<option value="${key(a.name)}">${esc(a.name)}</option>`).join('');
-  const body = document.getElementById('meetbody');
-  body.innerHTML = (me ? '' : '<div class="mwho">Choose your name in "Commenting as" at the top to add items.</div>') + riskHtml() + MTYPES.map(t => {
+  MTYPES.forEach(t => {
+    const el = document.getElementById('view-' + t.id);
     const list = items.filter(i => i.type === t.id);
     const d = mdrafts[t.id] || {};
-    const open = t.tick ? list.filter(i => !i.done).length : list.length;
-    return `<section class="msec ${t.id}"><h3>${t.label}${list.length ? ` <span>${t.tick ? open + ' open of ' + list.length : list.length}</span>` : ''}</h3>
-      <div class="mlist">${list.length ? list.map(i => meetItemHtml(i, t)).join('') : '<div class="mempty">Nothing yet this week</div>'}</div>
+    el.innerHTML = vhead(t.label, DESC[t.id]) + who +
+      `<div class="mlist">${list.length ? list.map(i => meetItemHtml(i, t)).join('') : '<div class="mempty">Nothing yet this week</div>'}</div>
       <div class="madd" data-type="${t.id}">
-        <textarea rows="1" class="mnew" placeholder="${t.add}">${esc(d.text || '')}</textarea>
+        <textarea rows="2" class="mnew" placeholder="${t.add}">${esc(d.text || '')}</textarea>
         <div class="mrow"><select class="madv" aria-label="Adviser">${advOpts}</select>${t.id === 'act' ? `<select class="mowner" aria-label="Owner"><option value="">Owner</option>${MANAGERS.map(m => `<option value="${m.name}">${m.name}</option>`).join('')}</select>` : ''}<button class="madd-btn">Add</button></div>
-      </div></section>`;
-  }).join('');
-  bindRisk(body);
+      </div>`;
+    bindMeet(el);
+  });
+  const rv = document.getElementById('view-risk');
+  rv.innerHTML = vhead('Friday risk review', DESC.risk) + riskHtml();
+  bindRisk(rv);
+}
+function bindMeet(body){
   body.querySelectorAll('.madd').forEach(box => {
     const type = box.dataset.type, d = mdrafts[type] = mdrafts[type] || {};
     const ta = box.querySelector('.mnew'), adv = box.querySelector('.madv'), own = box.querySelector('.mowner');
@@ -881,14 +938,23 @@ async function meetDelete(id){
     render();
   }catch(e){ setSave('Could not remove', true); }
 }
-function openMeet(open){
-  document.body.classList.toggle('meet-open', open);
-  try{ localStorage.setItem('podc_meet_open', open ? '1' : ''); }catch(e){}
+function setView(v){
+  view = v;
+  document.querySelectorAll('[data-view]').forEach(el => { el.hidden = el.dataset.view !== v; });
+  document.querySelectorAll('.navi').forEach(n => n.classList.toggle('on', n.dataset.go === v));
+  try{ localStorage.setItem('podc_view', v); }catch(e){}
+  if(window.innerWidth < 900) toggleSide(false);
+  window.scrollTo(0, 0);
 }
-document.getElementById('meetbtn').onclick = () => openMeet(!document.body.classList.contains('meet-open'));
-document.getElementById('meetclose').onclick = () => openMeet(false);
-document.getElementById('meet').addEventListener('focusout', () => setTimeout(() => { if(mDirty && !inMeet()){ mDirty = false; renderMeet(); } }, 0));
-try{ if(localStorage.getItem('podc_meet_open')) openMeet(true); }catch(e){}
+function toggleSide(open){
+  document.body.classList.toggle('side-closed', !open);
+  try{ localStorage.setItem('podc_side', open ? '1' : '0'); }catch(e){}
+}
+document.querySelectorAll('.navi').forEach(n => n.onclick = () => setView(n.dataset.go));
+document.getElementById('burger').onclick = () => toggleSide(document.body.classList.contains('side-closed'));
+document.querySelector('.main').addEventListener('focusout', () => setTimeout(() => { if(mDirty && !inMeet()){ mDirty = false; renderMeet(); } }, 0));
+(() => { let p = null; try{ p = localStorage.getItem('podc_side'); }catch(e){} toggleSide(p === null ? window.innerWidth >= 900 : p === '1'); })();
+setView(view);
 init();
 </script>
 </body>
