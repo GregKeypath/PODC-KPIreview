@@ -255,6 +255,17 @@ body.side-closed .side{margin-left:-240px}
 .rprev .ritem{background:var(--field);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--muted)}
 .rprev .ritem b{display:block;color:var(--ink);font-size:11px;margin-bottom:2px}
 .rprev .ritem div{white-space:pre-wrap}
+.mview.rr{max-width:1240px}
+.rtable{background:var(--panel);border-radius:14px;box-shadow:var(--shadow);overflow-x:auto;border-top:4px solid var(--mc)}
+.rtable table{min-width:720px;width:100%;table-layout:fixed;border-collapse:collapse}
+.rtable thead th{position:static;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:var(--field);text-align:left;padding:10px 12px;border-left:1px solid var(--line)}
+.rtable th.rp{width:96px}
+.rtable thead th.rp{border-left:0}
+.rtable tbody th{background:var(--pcs);vertical-align:top;text-align:left;padding:12px;border-top:1px solid var(--line)}
+.rtable td{vertical-align:top;padding:8px;border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.rtable textarea{min-height:96px;font-size:13px;background:var(--field)}
+.rtable.prev{border-top-color:var(--line);box-shadow:none;border:1px solid var(--line)}
+.rtable.prev td{font-size:13px;color:var(--muted);white-space:pre-wrap;padding:10px 12px}
 @media (max-width:720px){.alert{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}h1{font-size:22px}.detailgrid{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -350,11 +361,17 @@ const rTimers = {};
 function riskHtml(){
   const wk = iso(week), pw = iso(addDays(week, -7));
   const cur = risk[wk] || {}, prev = risk[pw] || {};
-  const boxes = RHEADS.map(h => `<div class="rbox"><label for="r_${h.f}">${h.label}</label><textarea id="r_${h.f}" rows="2" data-risk="${h.f}" placeholder="Free text">${esc(cur[h.f] || '')}</textarea></div>`).join('');
+  const head = `<thead><tr><th class="rp">Partner</th>${RHEADS.map(h => `<th>${h.label}</th>`).join('')}</tr></thead>`;
+  const rows = (src, edit) => PARTNERS.map(p => `<tr class="${p.id}"><th class="rp" scope="row"><span class="chip">${p.book}</span></th>${RHEADS.map(h => {
+    const f = p.id + '_' + h.f;
+    return edit
+      ? `<td><textarea rows="3" data-risk="${f}" aria-label="${p.book}: ${h.label}" placeholder="Free text">${esc(cur[f] || '')}</textarea></td>`
+      : `<td>${String(src[f] || '').trim() ? esc(src[f]) : '<span class="mempty">None</span>'}</td>`;
+  }).join('')}</tr>`).join('');
   const meta = cur.updatedBy ? `<div class="rmeta">Last edited by ${esc(String(cur.updatedBy).split(' ')[0])}, ${esc(when(cur.updatedAt))}</div>` : '';
-  const prevItems = RHEADS.filter(h => String(prev[h.f] || '').trim()).map(h => `<div class="ritem"><b>${h.label}</b><div>${esc(prev[h.f])}</div></div>`).join('');
-  const prevHtml = `<div class="rprev"><h4>Last week, ${esc(fmt(addDays(week, -7)))}</h4>${prevItems || '<div class="mempty">No risk review saved for last week</div>'}</div>`;
-  return `<section style="display:grid;gap:12px">${boxes}${meta}${prevHtml}</section>`;
+  const hasPrev = Object.keys(prev).some(k => k.indexOf('_') > 0 && String(prev[k] || '').trim());
+  const prevHtml = `<div class="rprev"><h4>Last week, ${esc(fmt(addDays(week, -7)))}</h4>${hasPrev ? `<div class="rtable prev"><table>${head}<tbody>${rows(prev, false)}</tbody></table></div>` : '<div class="mempty">No risk review saved for last week</div>'}</div>`;
+  return `<section style="display:grid;gap:12px"><div class="rtable"><table>${head}<tbody>${rows(cur, true)}</tbody></table></div>${meta}${prevHtml}</section>`;
 }
 function bindRisk(body){
   body.querySelectorAll('[data-risk]').forEach(ta => {
@@ -373,6 +390,7 @@ function bindRisk(body){
           if(!res.ok) throw new Error(res.status);
           Object.assign(r, patch);
           setSave('Saved');
+          renderMeet();
         }catch(e){ setSave('Not saved', true); }
       }, 700);
     });
@@ -863,7 +881,7 @@ function renderMeet(){
     document.querySelector(`.navi[data-go="${t.id}"] b`).textContent = n || '';
   });
   const rcur = risk[wk] || {};
-  document.querySelector('.navi[data-go="risk"] b').textContent = RHEADS.some(h => String(rcur[h.f] || '').trim()) ? '✓' : '';
+  document.querySelector('.navi[data-go="risk"] b').textContent = Object.keys(rcur).some(k => k.indexOf('_') > 0 && String(rcur[k] || '').trim()) ? '✓' : '';
   if(inMeet()){ mDirty = true; return; }
   const who = me ? '' : '<div class="mwho">Choose your name in "Commenting as" at the top before adding anything.</div>';
   const advOpts = '<option value="">No adviser</option>' + ADVISERS.map(a => `<option value="${key(a.name)}">${esc(a.name)}</option>`).join('');
