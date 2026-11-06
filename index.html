@@ -300,7 +300,6 @@ body.side-closed .side{margin-left:-240px}
   <nav class="side" id="side" aria-label="Sections">
     <p class="side-label">1:1 catch-up</p>
     <button class="navi" data-go="tp" style="--nc:var(--blue)"><i></i>Talking points<b></b></button>
-    <button class="navi" data-go="q" style="--nc:var(--orange)"><i></i>Questions<b></b></button>
     <button class="navi" data-go="act" style="--nc:var(--green)"><i></i>Actions<b></b></button>
     <button class="navi" data-go="mn" style="--nc:var(--exc)"><i></i>Meeting notes<b></b></button>
     <p class="side-label">Friday</p>
@@ -310,7 +309,6 @@ body.side-closed .side{margin-left:-240px}
   </nav>
   <main class="main">
     <section class="mview msec tp" id="view-tp" data-view="tp"></section>
-    <section class="mview msec q" id="view-q" data-view="q" hidden></section>
     <section class="mview msec act" id="view-act" data-view="act" hidden></section>
     <section class="mview msec mn" id="view-mn" data-view="mn" hidden></section>
     <section class="mview msec rr" id="view-risk" data-view="risk" hidden></section>
@@ -342,8 +340,7 @@ const ROOT = 'https://unsw-team-calendar-default-rtdb.asia-southeast1.firebaseda
 const DB = ROOT + '/weekly_kpi', DBC = ROOT + '/weekly_kpi_comments';
 const DBM = ROOT + '/weekly_1on1';
 const MTYPES = [
-  {id:'tp', label:'Talking points', one:'Talking point', add:'Add a talking point', tick:'Discussed'},
-  {id:'q', label:'Questions', one:'Question', add:'Ask a question'},
+  {id:'tp', label:'Talking points', one:'Talking point', add:'Add a talking point or question', tick:'Discussed'},
   {id:'act', label:'Actions', one:'Action', add:'Add an action', tick:'Done'},
   {id:'mn', label:'Meeting notes', one:'Note', add:'Add a note from the catch-up'}
 ];
@@ -863,8 +860,7 @@ function meetItemHtml(i, t){
     <div class="mmeta">${t.id === 'act' && i.owner ? `<span class="mown">${esc(i.owner.split(' ')[0])}</span>` : ''}${adv ? `<span class="mtag">${esc(adv.name)}</span>` : ''}<span>${esc(String(i.by || '').split(' ')[0])} &middot; ${esc(when(i.at))}</span>${i.by === me ? `<button class="mdel" data-mdel="${esc(i.id)}">Remove</button>` : ''}</div></div>`;
 }
 const DESC = {
-  tp:'Things either of us wants to raise.',
-  q:'Questions for each other, with the answer recorded.',
+  tp:'Things either of us wants to raise or ask.',
   act:'Agreed actions, each with an owner.',
   mn:'Notes from the catch-up.',
   risk:'Presented on Friday. Free text, with last week underneath for comparison.'
