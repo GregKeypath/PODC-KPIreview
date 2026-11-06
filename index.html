@@ -831,7 +831,9 @@ function alertLines(x){
   return out;
 }
 
-function fit(el){ el.style.height = 'auto'; el.style.height = el.scrollHeight + 2 + 'px'; }
+function fit(el){ if(!el.offsetParent) return; el.style.height = 'auto'; el.style.height = el.scrollHeight + 2 + 'px'; }
+function fitVisible(){ document.querySelectorAll('[data-view]:not([hidden]) textarea').forEach(fit); }
+window.addEventListener('resize', () => { clearTimeout(window.__fitT); window.__fitT = setTimeout(fitVisible, 150); });
 
 function onEdit(k, el){
   const wk = iso(week);
@@ -1036,6 +1038,7 @@ function setView(v){
   try{ localStorage.setItem('podc_view', v); }catch(e){}
   if(window.innerWidth < 900) toggleSide(false);
   window.scrollTo(0, 0);
+  fitVisible();
 }
 function toggleSide(open){
   document.body.classList.toggle('side-closed', !open);
