@@ -266,6 +266,24 @@ body.side-closed .side{margin-left:-240px}
 .rtable textarea{min-height:96px;font-size:13px;background:var(--field)}
 .rtable.prev{border-top-color:var(--line);box-shadow:none;border:1px solid var(--line)}
 .rtable.prev td{font-size:13px;color:var(--muted);white-space:pre-wrap;padding:10px 12px}
+.rpart{display:grid;gap:10px}
+.rpart + .rpart{margin-top:18px}
+.rph{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.rph h3{margin:0;font-size:17px;font-weight:600;display:flex;align-items:center;gap:10px;text-transform:none;letter-spacing:0;color:var(--ink)}
+.rph h3::before{display:none}
+.radd{background:var(--pc);color:var(--pci);border:0;border-radius:8px;padding:7px 14px;font-weight:600;cursor:pointer}
+.radd:hover{filter:brightness(.94)}
+.rpart .rtable{border-top:4px solid var(--pc)}
+.rpart .rtable thead th{background:var(--pcs)}
+.rtable th.rn,.rtable td.rn{width:40px;text-align:center;color:var(--muted);font-family:var(--mono)}
+.rtable th.rx,.rtable td.rx{width:44px;text-align:center}
+.rdel{background:none;border:0;color:var(--faint);font-size:18px;line-height:1;cursor:pointer;border-radius:6px;padding:2px 6px}
+.rdel:hover{color:var(--flag);background:var(--flag-bg)}
+.rempty{color:var(--faint);text-align:center;padding:16px!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+details.rprev{border-top:0;padding-top:0;margin-top:0}
+details.rprev summary{cursor:pointer;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:4px 0}
+details.rprev .rtable{margin-top:8px}
 @media (max-width:720px){.alert{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}h1{font-size:22px}.detailgrid{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -349,49 +367,85 @@ const mdrafts = {};
 let mDirty = false;
 const DBR = ROOT + '/weekly_risk';
 const RHEADS = [
-  {f:'risks', label:'Key risks this week'},
+  {f:'risks', label:'Risk'},
   {f:'mitigation', label:'What we\'re doing about it'},
   {f:'escalate', label:'Escalations or support needed'}
 ];
 let risk = {};
 const rTimers = {};
+let focusRisk = null;
+function riskRows(wk, pid){ return Object.entries(((risk[wk] || {})[pid]) || {}).filter(([, v]) => v && typeof v === 'object').map(([id, v]) => Object.assign({id}, v)).sort((x, y) => String(x.at).localeCompare(String(y.at))); }
+function riskCount(wk){ return PARTNERS.reduce((n, p) => n + riskRows(wk, p.id).length, 0); }
 function riskHtml(){
   const wk = iso(week), pw = iso(addDays(week, -7));
-  const cur = risk[wk] || {}, prev = risk[pw] || {};
-  const head = `<thead><tr><th class="rp">Partner</th>${RHEADS.map(h => `<th>${h.label}</th>`).join('')}</tr></thead>`;
-  const rows = (src, edit) => PARTNERS.map(p => `<tr class="${p.id}"><th class="rp" scope="row"><span class="chip">${p.book}</span></th>${RHEADS.map(h => {
-    const f = p.id + '_' + h.f;
-    return edit
-      ? `<td><textarea rows="3" data-risk="${f}" aria-label="${p.book}: ${h.label}" placeholder="Free text">${esc(cur[f] || '')}</textarea></td>`
-      : `<td>${String(src[f] || '').trim() ? esc(src[f]) : '<span class="mempty">None</span>'}</td>`;
-  }).join('')}</tr>`).join('');
-  const meta = cur.updatedBy ? `<div class="rmeta">Last edited by ${esc(String(cur.updatedBy).split(' ')[0])}, ${esc(when(cur.updatedAt))}</div>` : '';
-  const hasPrev = Object.keys(prev).some(k => k.indexOf('_') > 0 && String(prev[k] || '').trim());
-  const prevHtml = `<div class="rprev"><h4>Last week, ${esc(fmt(addDays(week, -7)))}</h4>${hasPrev ? `<div class="rtable prev"><table>${head}<tbody>${rows(prev, false)}</tbody></table></div>` : '<div class="mempty">No risk review saved for last week</div>'}</div>`;
-  return `<section style="display:grid;gap:12px"><div class="rtable"><table>${head}<tbody>${rows(cur, true)}</tbody></table></div>${meta}${prevHtml}</section>`;
+  const head = edit => `<thead><tr><th class="rn">#</th>${RHEADS.map(h => `<th>${h.label}</th>`).join('')}${edit ? '<th class="rx"><span class="sr">Remove</span></th>' : ''}</tr></thead>`;
+  const table = (p, w, edit) => {
+    const rows = riskRows(w, p.id);
+    const body = rows.length ? rows.map((r, i) => `<tr data-rid="${esc(r.id)}"><td class="rn">${i + 1}</td>${RHEADS.map(h => edit
+      ? `<td><textarea rows="2" data-risk="${h.f}" data-rp="${p.id}" data-rid="${esc(r.id)}" aria-label="${p.book} risk ${i + 1}: ${h.label}" placeholder="Free text">${esc(r[h.f] || '')}</textarea></td>`
+      : `<td>${String(r[h.f] || '').trim() ? esc(r[h.f]) : '<span class="mempty">None</span>'}</td>`).join('')}${edit ? `<td class="rx"><button class="rdel" data-rdel="${esc(r.id)}" data-rp="${p.id}" aria-label="Remove ${p.book} risk ${i + 1}" title="Remove this risk">&times;</button></td>` : ''}</tr>`).join('')
+      : `<tr><td class="rempty" colspan="${RHEADS.length + (edit ? 2 : 1)}">${edit ? 'No risks added yet' : 'No risks recorded'}</td></tr>`;
+    return `<div class="rtable ${p.id} ${edit ? '' : 'prev'}"><table>${head(edit)}<tbody>${body}</tbody></table></div>`;
+  };
+  return PARTNERS.map(p => {
+    const prev = riskRows(pw, p.id);
+    return `<section class="rpart ${p.id}"><div class="rph"><h3>${p.name}</h3><button class="radd" data-radd="${p.id}">+ Add risk</button></div>
+      ${table(p, wk, true)}
+      <details class="rprev" ${prev.length ? 'open' : ''}><summary>Last week, ${esc(fmt(addDays(week, -7)))} (${prev.length} ${prev.length === 1 ? 'risk' : 'risks'})</summary>${table(p, pw, false)}</details>
+    </section>`;
+  }).join('');
 }
 function bindRisk(body){
   body.querySelectorAll('[data-risk]').forEach(ta => {
     fit(ta);
     ta.addEventListener('input', () => {
       fit(ta);
-      const wk = iso(week), f = ta.dataset.risk;
-      const r = risk[wk] = risk[wk] || {};
-      r[f] = ta.value;
+      const wk = iso(week), f = ta.dataset.risk, pid = ta.dataset.rp, id = ta.dataset.rid;
+      const row = ((risk[wk] || {})[pid] || {})[id];
+      if(!row) return;
+      row[f] = ta.value;
       setSave('Saving...');
-      clearTimeout(rTimers[wk + f]);
-      rTimers[wk + f] = setTimeout(async () => {
-        const patch = {[f]:r[f], updatedBy:me || '', updatedAt:new Date().toISOString()};
+      const tk = wk + pid + id + f;
+      clearTimeout(rTimers[tk]);
+      rTimers[tk] = setTimeout(async () => {
+        const patch = {[f]:row[f], updatedBy:me || '', updatedAt:new Date().toISOString()};
         try{
-          const res = await fetch(`${DBR}/${wk}.json`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(patch)});
+          const res = await fetch(`${DBR}/${wk}/${pid}/${id}.json`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(patch)});
           if(!res.ok) throw new Error(res.status);
-          Object.assign(r, patch);
+          Object.assign(row, patch);
           setSave('Saved');
-          renderMeet();
         }catch(e){ setSave('Not saved', true); }
       }, 700);
     });
   });
+  body.querySelectorAll('[data-radd]').forEach(b => b.onclick = () => riskAdd(b.dataset.radd));
+  body.querySelectorAll('[data-rdel]').forEach(b => b.onclick = () => riskDelete(b.dataset.rp, b.dataset.rdel));
+  if(focusRisk){ const el = body.querySelector(`textarea[data-rid="${focusRisk}"]`); focusRisk = null; if(el) el.focus(); }
+}
+async function riskAdd(pid){
+  const wk = iso(week);
+  if(!me){ setSave('Choose your name first', true); document.getElementById('me').focus(); return; }
+  const row = {risks:'', mitigation:'', escalate:'', by:me, at:new Date().toISOString()};
+  try{
+    const res = await fetch(`${DBR}/${wk}/${pid}.json`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(row)});
+    if(!res.ok) throw new Error(res.status);
+    const {name} = await res.json();
+    risk[wk] = risk[wk] || {};
+    (risk[wk][pid] = risk[wk][pid] || {})[name] = row;
+    focusRisk = name;
+    setSave('Risk added');
+    renderMeet();
+  }catch(e){ setSave('Not added', true); }
+}
+async function riskDelete(pid, id){
+  const wk = iso(week);
+  try{
+    const res = await fetch(`${DBR}/${wk}/${pid}/${id}.json`, {method:'DELETE'});
+    if(!res.ok) throw new Error(res.status);
+    delete risk[wk][pid][id];
+    setSave('Risk removed');
+    renderMeet();
+  }catch(e){ setSave('Could not remove', true); }
 }
 const MANAGERS = [{name:'Greg Banks', colour:'var(--blue)'}, {name:'Carmela Gomez', colour:'var(--red)'}];
 const PARTNERS = [
@@ -877,7 +931,7 @@ function renderMeet(){
     document.querySelector(`.navi[data-go="${t.id}"] b`).textContent = n || '';
   });
   const rcur = risk[wk] || {};
-  document.querySelector('.navi[data-go="risk"] b').textContent = Object.keys(rcur).some(k => k.indexOf('_') > 0 && String(rcur[k] || '').trim()) ? '✓' : '';
+  document.querySelector('.navi[data-go="risk"] b').textContent = riskCount(wk) || '';
   if(inMeet()){ mDirty = true; return; }
   const who = me ? '' : '<div class="mwho">Choose your name in "Commenting as" at the top before adding anything.</div>';
   const advOpts = '<option value="">No adviser</option>' + ADVISERS.map(a => `<option value="${key(a.name)}">${esc(a.name)}</option>`).join('');
