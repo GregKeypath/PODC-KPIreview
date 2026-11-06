@@ -252,6 +252,7 @@ textarea.medit:focus{background:var(--panel);border-color:var(--focus);outline:n
 .madd{display:grid;gap:6px;margin-top:8px}
 .madd textarea{min-height:32px;font-size:13px;background:var(--field)}
 .madd .mrow{display:flex;gap:6px}
+.mhint{font-size:11px;color:var(--faint);margin-top:-2px}
 .madd select{flex:1;min-width:0;font-size:12px;padding:5px 6px}
 .madd button{background:var(--mc);color:#fff;border:0;border-radius:7px;padding:5px 14px;font-weight:600;cursor:pointer;font-size:12px;flex:none}
 .madd button:hover{filter:brightness(.92)}
@@ -934,7 +935,7 @@ const DESC = {
   tp:'Things either of us wants to raise or ask.',
   act:'Agreed actions, each with an owner.',
   mn:'Notes from the catch-up.',
-  risk:'Presented on Friday. Free text, with last week underneath for comparison.'
+  risk:'Presented on Friday. Free text, with last week underneath for comparison. Type - and a space for dot points.'
 };
 let view = 'tp';
 try{ const v = localStorage.getItem('podc_view'); if(v && document.querySelector(`[data-view="${v}"]`)) view = v; }catch(e){}
@@ -960,6 +961,7 @@ function renderMeet(){
       `<div class="mlist">${list.length ? list.map(i => meetItemHtml(i, t)).join('') : '<div class="mempty">Nothing yet this week</div>'}</div>
       <div class="madd" data-type="${t.id}">
         <textarea rows="2" class="mnew" placeholder="${t.add}">${esc(d.text || '')}</textarea>
+        <div class="mhint">Type - and a space for dot points. Enter adds it, Shift+Enter starts a new line.</div>
         <div class="mrow"><select class="madv" aria-label="Adviser">${advOpts}</select>${t.id === 'act' ? `<select class="mowner" aria-label="Owner"><option value="">Owner</option>${MANAGERS.map(m => `<option value="${m.name}">${m.name}</option>`).join('')}</select>` : ''}<button class="madd-btn">Add</button></div>
       </div>`;
     bindMeet(el);
@@ -1039,6 +1041,24 @@ function toggleSide(open){
   document.body.classList.toggle('side-closed', !open);
   try{ localStorage.setItem('podc_side', open ? '1' : '0'); }catch(e){}
 }
+function bulletArea(t){ return t && t.tagName === 'TEXTAREA' && t.closest && t.closest('.mview, .rtable'); }
+document.addEventListener('keydown', e => {
+  const ta = e.target;
+  if(e.key !== 'Enter' || e.shiftKey || !bulletArea(ta)) return;
+  const v = ta.value, s = ta.selectionStart, ls = v.lastIndexOf('\n', s - 1) + 1, line = v.slice(ls, s);
+  if(!/^\s*• /.test(line) && line.trim() !== '•') return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  if(line.trim() === '•') ta.setRangeText('', ls, s, 'end');
+  else ta.setRangeText('\n' + line.match(/^\s*/)[0] + '• ', s, ta.selectionEnd, 'end');
+  ta.dispatchEvent(new Event('input', {bubbles:true}));
+}, true);
+document.addEventListener('input', e => {
+  const ta = e.target;
+  if(!bulletArea(ta) || e.data !== ' ') return;
+  const v = ta.value, s = ta.selectionStart, ls = v.lastIndexOf('\n', s - 1) + 1, line = v.slice(ls, s);
+  if(/^\s*[-*] $/.test(line)) ta.setRangeText(line.replace(/[-*] $/, '• '), ls, s, 'end');
+}, true);
 document.querySelectorAll('.navi').forEach(n => n.onclick = () => setView(n.dataset.go));
 document.getElementById('burger').onclick = () => toggleSide(document.body.classList.contains('side-closed'));
 document.querySelector('.main').addEventListener('focusout', () => setTimeout(() => { if(mDirty && !inMeet()){ mDirty = false; renderMeet(); } }, 0));
