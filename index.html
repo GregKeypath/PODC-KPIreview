@@ -279,7 +279,29 @@ textarea.medit:focus{background:var(--panel);border-color:var(--focus);outline:n
 .rtable td{vertical-align:top;padding:8px;border-top:1px solid var(--line);border-left:1px solid var(--line)}
 .rtable textarea{min-height:96px;font-size:13px;background:var(--field)}
 .rtable.prev{border-top-color:var(--line);box-shadow:none;border:1px solid var(--line)}
-.rtable.prev td{font-size:13px;color:var(--muted);white-space:pre-wrap;padding:10px 12px}
+.rtable.prev td{font-size:13px;color:var(--muted);padding:10px 12px}
+.rich{cursor:text;border-radius:8px;padding:6px 8px;min-height:34px;font-size:13px;line-height:1.5;color:var(--ink);border:1px solid transparent;overflow-wrap:anywhere}
+.rich:hover{background:var(--field);border-color:var(--line)}
+.rich:focus-visible{outline:2px solid var(--focus)}
+.rich-empty{color:var(--faint)}
+.rich p{margin:0}
+.rich ul{margin:2px 0 4px;padding-left:18px}
+.rich li{margin:1px 0}
+.rich li::marker{color:var(--mc,var(--blue))}
+.rich-gap{height:8px}
+.rich-tw{overflow-x:auto;margin:4px 0 6px}
+.rich-t,.rtable table.rich-t,.mview table.rich-t{border-collapse:collapse;min-width:0;width:auto;table-layout:auto;font-size:12px;margin:0}
+.rtable .rich-t th,.rtable .rich-t td,.mview .rich-t th,.mview .rich-t td{border:1px solid var(--line);padding:4px 10px;text-align:left;white-space:nowrap;position:static;text-transform:none;letter-spacing:0;font-size:12px;vertical-align:top}
+.rtable .rich-t th,.mview .rich-t th{background:var(--pcs,var(--field));font-weight:600;color:var(--ink)}
+.rich-t th,.rich-t td{border:1px solid var(--line);padding:4px 8px;text-align:left;white-space:nowrap;font-variant-numeric:tabular-nums;position:static}
+.rich-t th{background:var(--pcs,var(--field));font-weight:600;color:var(--ink);text-transform:none;letter-spacing:0;font-size:12px}
+.rich-t tbody tr:nth-child(even) td{background:var(--field)}
+.rtable.prev .rich-t td,.rtable.prev .rich p,.rtable.prev .rich li{color:var(--muted)}
+.mview .rich{font-size:14px}
+.mtext .rich{margin:-4px 0 -4px -8px;white-space:normal}
+.mi.done .rich{text-decoration:line-through}
+.rich-ro{cursor:default;padding:0}
+.rich-ro:hover{background:none;border-color:transparent}
 .rpart{display:grid;gap:10px}
 .rpart + .rpart{margin-top:18px}
 .rph{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
@@ -396,8 +418,8 @@ function riskHtml(){
   const table = (p, w, edit) => {
     const rows = riskRows(w, p.id);
     const body = rows.length ? rows.map((r, i) => `<tr data-rid="${esc(r.id)}"><td class="rn">${i + 1}</td>${RHEADS.map(h => edit
-      ? `<td><textarea rows="2" data-risk="${h.f}" data-rp="${p.id}" data-rid="${esc(r.id)}" aria-label="${p.book} risk ${i + 1}: ${h.label}" placeholder="Free text">${esc(r[h.f] || '')}</textarea></td>`
-      : `<td>${String(r[h.f] || '').trim() ? esc(r[h.f]) : '<span class="mempty">None</span>'}</td>`).join('')}${edit ? `<td class="rx"><button class="rdel" data-rdel="${esc(r.id)}" data-rp="${p.id}" aria-label="Remove ${p.book} risk ${i + 1}" title="Remove this risk">&times;</button></td>` : ''}</tr>`).join('')
+      ? `<td>${richEdit(r[h.f], `<textarea rows="2" data-risk="${h.f}" data-rp="${p.id}" data-rid="${esc(r.id)}" aria-label="${p.book} risk ${i + 1}: ${h.label}" placeholder="Free text">${esc(r[h.f] || '')}</textarea>`)}</td>`
+      : `<td>${String(r[h.f] || '').trim() ? `<div class="rich rich-ro">${richText(r[h.f])}</div>` : '<span class="mempty">None</span>'}</td>`).join('')}${edit ? `<td class="rx"><button class="rdel" data-rdel="${esc(r.id)}" data-rp="${p.id}" aria-label="Remove ${p.book} risk ${i + 1}" title="Remove this risk">&times;</button></td>` : ''}</tr>`).join('')
       : `<tr><td class="rempty" colspan="${RHEADS.length + (edit ? 2 : 1)}">${edit ? 'No risks added yet' : 'No risks recorded'}</td></tr>`;
     return `<div class="rtable ${p.id} ${edit ? '' : 'prev'}"><table>${head(edit)}<tbody>${body}</tbody></table></div>`;
   };
@@ -930,7 +952,7 @@ function meetItemHtml(i, t){
   const extra = t.id === 'tp'
     ? `<label class="mtick mtoact"><input type="checkbox" data-mtoact="${esc(i.id)}"><span>Action</span></label>${ownSel('data-mtpown')}`
     : t.id === 'act' ? ownSel('data-mown') + (i.fromTp ? '<span class="mtag">From talking points</span>' : '') : '';
-  return `<div class="mi ${i.done ? 'done' : ''}"><div class="mtop"><div class="mtext"><textarea class="medit" rows="1" data-medit="${esc(i.id)}" aria-label="Edit ${t.one.toLowerCase()}">${esc(i.text)}</textarea></div></div>${ans}
+  return `<div class="mi ${i.done ? 'done' : ''}"><div class="mtop"><div class="mtext">${richEdit(i.text, `<textarea class="medit" rows="1" data-medit="${esc(i.id)}" aria-label="Edit ${t.one.toLowerCase()}">${esc(i.text)}</textarea>`)}</div></div>${ans}
     <div class="mmeta">${chk}${extra}${adv ? `<span class="mtag">${esc(adv.name)}</span>` : ''}<span>${esc(String(i.by || '').split(' ')[0])} &middot; ${esc(when(i.at))}</span>${i.editedBy ? `<span class="medited">edited by ${esc(String(i.editedBy).split(' ')[0])}, ${esc(when(i.editedAt))}</span>` : ''}${i.by === me ? `<button class="mdel" data-mdel="${esc(i.id)}">Remove</button>` : ''}</div></div>`;
 }
 const DESC = {
@@ -1044,6 +1066,62 @@ function toggleSide(open){
   document.body.classList.toggle('side-closed', !open);
   try{ localStorage.setItem('podc_side', open ? '1' : '0'); }catch(e){}
 }
+function richText(s){
+  const lines = String(s || '').replace(/\r/g, '').split('\n');
+  const out = [];
+  let i = 0;
+  const isRow = l => l.indexOf('\t') !== -1;
+  const isBullet = l => /^\s*[•\-*]\s+/.test(l);
+  while(i < lines.length){
+    const l = lines[i];
+    if(isRow(l)){
+      const rows = [];
+      while(i < lines.length && isRow(lines[i])){ rows.push(lines[i].split('\t')); i++; }
+      const cols = Math.max(...rows.map(r => r.length));
+      const cell = (tag, c) => `<${tag}>${esc(String(c || '').trim())}</${tag}>`;
+      const pad = r => r.concat(Array(cols - r.length).fill(''));
+      const headed = rows.length > 1 && !rows[0].some(c => /[0-9]/.test(c));
+      const bodyRows = headed ? rows.slice(1) : rows;
+      out.push(`<div class="rich-tw"><table class="rich-t">${headed ? `<thead><tr>${pad(rows[0]).map(c => cell('th', c)).join('')}</tr></thead>` : ''}<tbody>${bodyRows.map(r => `<tr>${pad(r).map(c => cell('td', c)).join('')}</tr>`).join('')}</tbody></table></div>`);
+    }else if(isBullet(l)){
+      const items = [];
+      while(i < lines.length && isBullet(lines[i])){ items.push(lines[i].replace(/^\s*[•\-*]\s+/, '')); i++; }
+      out.push(`<ul>${items.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`);
+    }else if(!l.trim()){
+      out.push('<div class="rich-gap"></div>');
+      i++;
+    }else{
+      out.push(`<p>${esc(l)}</p>`);
+      i++;
+    }
+  }
+  return out.join('');
+}
+function richEdit(value, textarea){
+  const has = String(value || '').trim();
+  return `<div class="rt-wrap"><div class="rich ${has ? '' : 'rich-empty'}" tabindex="0" role="button" aria-label="Click to edit">${has ? richText(value) : 'Click to add'}</div>${textarea.replace('<textarea ', '<textarea hidden ')}</div>`;
+}
+function richOpen(div){
+  const ta = div.parentElement.querySelector('textarea');
+  if(!ta) return;
+  div.hidden = true;
+  ta.hidden = false;
+  fit(ta);
+  ta.focus();
+  ta.setSelectionRange(ta.value.length, ta.value.length);
+}
+document.addEventListener('click', e => { const d = e.target.closest && e.target.closest('.rich'); if(d && !e.target.closest('a')) richOpen(d); });
+document.addEventListener('keydown', e => { if((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('rich')){ e.preventDefault(); richOpen(e.target); } });
+document.addEventListener('focusout', e => {
+  const ta = e.target;
+  if(!ta || ta.tagName !== 'TEXTAREA' || !ta.closest('.rt-wrap')) return;
+  const div = ta.parentElement.querySelector('.rich');
+  const has = ta.value.trim();
+  div.innerHTML = has ? richText(ta.value) : 'Click to add';
+  div.classList.toggle('rich-empty', !has);
+  ta.hidden = true;
+  div.hidden = false;
+});
 function bulletArea(t){ return t && t.tagName === 'TEXTAREA' && t.closest && t.closest('.mview, .rtable'); }
 document.addEventListener('keydown', e => {
   const ta = e.target;
