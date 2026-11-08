@@ -6,18 +6,18 @@
 <title>Pod C 1:1 Hub</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
   --red:#fc4a62;--orange:#fd9a5a;--yellow:#f8d94a;--green:#3cd39a;--blue:#4a7bd8;--navy:#0b5cb0;--lav:#e9e8fc;
-  --bg:#f4f6fd;--panel:#ffffff;--ink:#1d2b4f;--muted:#5f6f8f;--faint:#9aa6bd;--line:#e2e8f4;--field:#f3f6fc;--fieldhover:#e8eefa;--focus:#4a7bd8;
-  --hero-ink:#ffffff;--hero-glass:rgba(255,255,255,.16);--hero-glass-hover:rgba(255,255,255,.28);--hero-muted:rgba(255,255,255,.78);
+  --bg:#f3f2ee;--panel:#ffffff;--ink:#24262b;--muted:#61656d;--faint:#a2a4aa;--line:#e6e3dc;--field:#f6f5f1;--fieldhover:#ece9e3;--focus:#4a7bd8;
+  --hero-ink:#24262b;--hero-glass:#f3f2ee;--hero-glass-hover:#e9e6df;--hero-muted:#61656d;
   --unsw:#f2b705;--unsw-ink:#4a3500;--unsw-soft:#fff6d6;--mbs:#0b5cb0;--mbs-ink:#ffffff;--mbs-soft:#e5effb;
   --flag:#e23950;--flag-bg:#ffe9ec;--watch:#a67c00;--watch-bg:#fff3bf;--ok:#17a673;--ok-bg:#e3f8ef;--exc:#6a5be0;--exc-bg:#efedff;
-  --act-tint:#eef4fe;--kpi-tint:#f5f3ff;--rev-tint:#effaf4;--alt:#fafbfe;--divider:#d5ddec;
+  --act-tint:#f5f7fb;--kpi-tint:#f8f6fd;--rev-tint:#f3f9f5;--alt:#fbfaf8;--divider:#e0ddd5;
   --ovr:#3d68cc;--ovr-bg:#e9e8fc;--plan:#0b5cb0;--plan-bg:#e5effb;--none:#7d89a1;--none-bg:#eff2f8;
-  --shadow:0 1px 2px rgba(29,43,79,.05),0 6px 20px rgba(29,43,79,.06);
-  --sans:"Geist",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"Geist Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --shadow:0 1px 2px rgba(36,38,43,.05);
+  --sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--display:"Bricolage Grotesque","DM Sans",system-ui,sans-serif;--mono:"Geist Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
   color-scheme:light;
 }
 *{box-sizing:border-box}
@@ -327,6 +327,77 @@ details.rprev summary{cursor:pointer;font-size:12px;letter-spacing:.06em;text-tr
 details.rprev .rtable{margin-top:8px}
 @media (max-width:720px){.alert{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}h1{font-size:22px}.detailgrid{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.hero{background:var(--panel);color:var(--ink);border-bottom:1px solid var(--line)}
+.hero::after{height:3px;opacity:.85}
+.heroin{max-width:none;padding-inline:20px;padding-block:14px 16px}
+.brand svg{width:40px;height:40px;filter:none}
+h1{font-family:var(--display);font-size:23px;font-weight:700;letter-spacing:-.01em}
+.eyebrow{color:var(--muted);letter-spacing:.08em}
+.save.err{color:var(--flag)}
+.weekctl label{font-weight:600}
+.side{background:var(--bg);border-right:1px solid var(--line);padding-top:20px}
+.side-label{color:var(--faint)}
+.navi{color:var(--ink);font-weight:500}
+.navi:hover{background:var(--fieldhover)}
+.navi.on{background:var(--panel);box-shadow:0 1px 2px rgba(36,38,43,.07),inset 3px 0 0 var(--nc);font-weight:600}
+.mview{max-width:1240px;padding:28px 24px 64px}
+.vhead h2,.phead h2,.ov h2,.rph h3,.ctitle{font-family:var(--display)}
+.vhead h2{font-size:26px;font-weight:700}
+.vhead h2::before{width:10px;height:10px;border-radius:50%}
+.vhead p{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.vweek{font-size:12px;font-weight:600;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:1px 10px}
+.mwho{background:var(--watch-bg);color:var(--watch)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;align-items:stretch;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.cards > .mempty{grid-column:1/-1;text-align:center;padding:26px 0}
+.card{--cc:#a77d00;--cbg:#fff3c4;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--cc);border-radius:10px;padding:12px 14px 10px;display:flex;flex-direction:column;gap:6px;min-height:150px;min-width:0}
+.card.done{opacity:.55}
+.card.done .ctitle{text-decoration:line-through}
+.cat-update{--cc:#9a7400;--cbg:#fff1c2}
+.cat-important{--cc:#c3354d;--cbg:#fde3e7}
+.cat-systems{--cc:#5d636c;--cbg:#eceef1}
+.cat-question{--cc:#3d68cc;--cbg:#e7edfb}
+.cat-win{--cc:#1f9461;--cbg:#e1f5ea}
+.ch{display:flex;align-items:center;gap:8px}
+.cic{width:30px;height:30px;border-radius:50%;background:var(--cbg);color:var(--cc);display:grid;place-items:center;flex:none}
+.cic svg{width:16px;height:16px}
+.ccat,.mcat{appearance:none;-webkit-appearance:none;width:auto;border:0;background:none;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--cc);padding:3px 6px;border-radius:6px;cursor:pointer}
+.ccat:hover,.mcat:hover{background:var(--cbg)}
+.ch .mdel{margin-left:auto}
+.card:hover .mdel{opacity:1}
+.ctitle{font-size:17px;font-weight:700;line-height:1.25;margin:2px 0 0 -4px;padding:1px 4px;border-radius:6px;outline:none;color:var(--ink);overflow-wrap:anywhere}
+.ctitle:empty::before{content:attr(data-ph);color:var(--faint);font-weight:500}
+.ctitle:hover{background:var(--field)}
+.ctitle:focus{background:var(--field);box-shadow:0 0 0 2px var(--focus)}
+.cbody .rich{font-size:13.5px;color:#4a4e56;margin-left:-8px;padding:4px 8px}
+.cbody .rich-ed{min-height:26px}
+.cbody .rich-ed:empty::before{content:"Add details"}
+.cfoot{margin-top:auto;padding-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.cfoot:empty{display:none}
+.cby{font-size:11px;color:var(--faint);border-top:1px dashed var(--line);padding-top:6px}
+.newcard{--cc:#9a7400;--cbg:#fff1c2;background:var(--panel);border:1px dashed var(--fieldhover);border-left:4px solid var(--cc);border-radius:12px;padding:12px 14px;margin:0 0 4px;box-shadow:none;display:grid;gap:8px}
+.mview .newcard{border-top:1px dashed #d9d6cf}
+.nrow{display:flex;align-items:center;gap:8px}
+.ntitle{flex:1;min-width:0;font-family:var(--display);font-size:17px;font-weight:600;border:0;background:var(--field);border-radius:8px;padding:8px 10px}
+.ntitle:focus{outline:none;box-shadow:0 0 0 2px var(--focus);background:var(--panel)}
+.newcard textarea{background:var(--field)}
+.newcard .madd-btn{background:var(--ink);color:#fff}
+.mtick{background:var(--field)}
+.mownsel{background:var(--field)}
+.mtag{background:var(--field);border-color:var(--line)}
+.ov,.tablewrap,.rtable,.alert{box-shadow:none;border:1px solid var(--line)}
+.ov{border-top:4px solid var(--pc)}
+.tablewrap{border-top:4px solid var(--pc)}
+.stat{border-radius:10px}
+thead tr.grp th{letter-spacing:.06em}
+.legend{font-size:12px}
+.msec .card h3.ctitle{display:block;font-size:17px;font-weight:700;letter-spacing:-.005em;text-transform:none;color:var(--ink);margin:2px 0 0 -4px}
+.msec .card h3.ctitle::before{content:none}
+.msec .card h3.ctitle:empty::before{content:attr(data-ph);display:inline;width:auto;height:auto;background:none;color:var(--faint);font-weight:500}
+.ov h2 .chip{color:var(--pci);font-size:11px;font-weight:600}
+.alert{background:var(--panel)!important;border:1px solid var(--line);border-left:4px solid var(--sc);border-radius:10px}
+.alert .who{font-family:var(--display);font-size:15px}
+.alert ul{color:var(--muted)}
+.alert ul b{color:var(--sc)}
 </style>
 </head>
 <body>
@@ -947,28 +1018,43 @@ function taggedHtml(wk, k){
   const list = meetItems(wk).filter(i => i.adviser === k);
   if(!list.length) return '';
   const one = id => (MTYPES.find(t => t.id === id) || {}).one || '1:1';
-  return `<div class="tagged">${list.map(i => `<button class="tchip" data-openmeet="1" data-go="${i.type}" title="${esc(textOf(i.text))}">1:1 ${esc(one(i.type))}: ${esc(textOf(i.text).length > 60 ? textOf(i.text).slice(0, 60) + '...' : textOf(i.text))}</button>`).join('')}</div>`;
+  return `<div class="tagged">${list.map(i => `<button class="tchip" data-openmeet="1" data-go="${i.type}" title="${esc(textOf(i.title || i.text))}">1:1 ${esc(one(i.type))}: ${esc(textOf(i.title || i.text).length > 60 ? textOf(i.title || i.text).slice(0, 60) + '...' : textOf(i.title || i.text))}</button>`).join('')}</div>`;
 }
+const CATS = [
+  {id:'update', label:'Update', icon:'<path d="M3 10v4h4l5 4V6L7 10H3z"/><path d="M16 9a3 3 0 0 1 0 6"/><path d="M18.5 6.5a7 7 0 0 1 0 11"/>'},
+  {id:'important', label:'Important', icon:'<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4"/><path d="M12 17h.01"/>'},
+  {id:'systems', label:'Systems & process', icon:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>'},
+  {id:'question', label:'Question', icon:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.3"/><path d="M12 17h.01"/>'},
+  {id:'win', label:'Win', icon:'<path d="M8 4h8v5a4 4 0 0 1-8 0V4z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4"/><path d="M12 13v4M8 21h8M10 17h4"/>'}
+];
+const catOf = id => CATS.find(c => c.id === id) || CATS[0];
+const catIcon = c => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${c.icon}</svg>`;
+const catOpts = sel => CATS.map(c => `<option value="${c.id}" ${sel === c.id ? 'selected' : ''}>${c.label}</option>`).join('');
 function meetItemHtml(i, t){
   const adv = i.adviser ? ADVISERS.find(a => key(a.name) === i.adviser) : null;
+  const c = catOf(i.cat);
   const chk = t.tick ? `<label class="mtick" title="${t.tick}"><input type="checkbox" data-mdone="${esc(i.id)}" ${i.done ? 'checked' : ''} aria-label="${t.tick}"><span>${t.tick}</span></label>` : '';
-  const ans = t.id === 'q' ? `<input class="mans" type="text" data-mans="${esc(i.id)}" placeholder="Answer" value="${esc(i.answer || '')}">` : '';
   const ownSel = attr => `<select class="mownsel" ${attr}="${esc(i.id)}" aria-label="Owner"><option value="">Owner</option>${MANAGERS.map(m => `<option value="${m.name}" ${i.owner === m.name ? 'selected' : ''}>${m.name.split(' ')[0]}</option>`).join('')}</select>`;
   const extra = t.id === 'tp'
     ? `<label class="mtick mtoact"><input type="checkbox" data-mtoact="${esc(i.id)}"><span>Action</span></label>${ownSel('data-mtpown')}`
     : t.id === 'act' ? ownSel('data-mown') + (i.fromTp ? '<span class="mtag">From talking points</span>' : '') : '';
-  return `<div class="mi ${i.done ? 'done' : ''}"><div class="mtop"><div class="mtext">${richEdit(i.text, `<textarea class="medit" rows="1" data-medit="${esc(i.id)}" aria-label="Edit ${t.one.toLowerCase()}">${esc(i.text)}</textarea>`)}</div></div>${ans}
-    <div class="mmeta">${chk}${extra}${adv ? `<span class="mtag">${esc(adv.name)}</span>` : ''}<span>${esc(String(i.by || '').split(' ')[0])} &middot; ${esc(when(i.at))}</span>${i.editedBy ? `<span class="medited">edited by ${esc(String(i.editedBy).split(' ')[0])}, ${esc(when(i.editedAt))}</span>` : ''}${i.by === me ? `<button class="mdel" data-mdel="${esc(i.id)}">Remove</button>` : ''}</div></div>`;
+  return `<article class="card cat-${c.id} ${i.done ? 'done' : ''}">
+    <div class="ch"><span class="cic">${catIcon(c)}</span><select class="ccat" data-mcat="${esc(i.id)}" aria-label="Category">${catOpts(c.id)}</select>${i.by === me ? `<button class="mdel" data-mdel="${esc(i.id)}" aria-label="Remove">Remove</button>` : ''}</div>
+    <h3 class="ctitle" contenteditable="true" data-mtitle="${esc(i.id)}" data-ph="Add a title">${esc(i.title || '')}</h3>
+    <div class="cbody">${richEdit(i.text, `<textarea class="medit" rows="1" data-medit="${esc(i.id)}" aria-label="Edit details" placeholder="Add details">${esc(i.text)}</textarea>`)}</div>
+    <div class="cfoot">${chk}${extra}${adv ? `<span class="mtag">${esc(adv.name)}</span>` : ''}</div>
+    <div class="cby">${esc(String(i.by || '').split(' ')[0])} &middot; ${esc(when(i.at))}${i.editedBy ? ` &middot; edited by ${esc(String(i.editedBy).split(' ')[0])}` : ''}</div>
+  </article>`;
 }
 const DESC = {
   tp:'Things either of us wants to raise or ask.',
   act:'Agreed actions, each with an owner.',
   mn:'Notes from the catch-up.',
-  risk:'Presented on Friday. Free text, with last week underneath for comparison. Type - and a space for dot points.'
+  risk:'Presented on Friday, with last week underneath for comparison. Type - and a space for dot points, or paste a table from Excel.'
 };
 let view = 'tp';
 try{ const v = localStorage.getItem('podc_view'); if(v && document.querySelector(`[data-view="${v}"]`)) view = v; }catch(e){}
-function vhead(title, d){ return `<div class="vhead"><h2>${title}</h2><p>${d} Week of ${esc(fmt(week))}.</p></div>`; }
+function vhead(title, d){ return `<div class="vhead"><h2>${title}</h2><p>${d} <span class="vweek">Week of ${esc(fmt(week))}</span></p></div>`; }
 function renderMeet(){
   const wk = iso(week);
   const items = meetItems(wk);
@@ -977,22 +1063,21 @@ function renderMeet(){
     const n = t.tick ? list.filter(i => !i.done).length : list.length;
     document.querySelector(`.navi[data-go="${t.id}"] b`).textContent = n || '';
   });
-  const rcur = risk[wk] || {};
   document.querySelector('.navi[data-go="risk"] b').textContent = riskCount(wk) || '';
   if(inMeet()){ mDirty = true; return; }
   const who = me ? '' : '<div class="mwho">Choose your name in "Commenting as" at the top before adding anything.</div>';
   const advOpts = '<option value="">No adviser</option>' + ADVISERS.map(a => `<option value="${key(a.name)}">${esc(a.name)}</option>`).join('');
   MTYPES.forEach(t => {
     const el = document.getElementById('view-' + t.id);
-    const list = items.filter(i => i.type === t.id);
+    const list = items.filter(i => i.type === t.id).sort((x, y) => (x.done ? 1 : 0) - (y.done ? 1 : 0));
     const d = mdrafts[t.id] || {};
     el.innerHTML = vhead(t.label, DESC[t.id]) + who +
-      `<div class="mlist">${list.length ? list.map(i => meetItemHtml(i, t)).join('') : '<div class="mempty">Nothing yet this week</div>'}</div>
-      <div class="madd" data-type="${t.id}">
-        <textarea rows="2" class="mnew" placeholder="${t.add}">${esc(d.text || '')}</textarea>
-        <div class="mhint">Type - and a space for dot points. Enter adds it, Shift+Enter starts a new line.</div>
-        <div class="mrow"><select class="madv" aria-label="Adviser">${advOpts}</select>${t.id === 'act' ? `<select class="mowner" aria-label="Owner"><option value="">Owner</option>${MANAGERS.map(m => `<option value="${m.name}">${m.name}</option>`).join('')}</select>` : ''}<button class="madd-btn">Add</button></div>
-      </div>`;
+      `<div class="madd newcard cat-${catOf(d.cat).id}" data-type="${t.id}">
+        <div class="nrow"><span class="cic">${catIcon(catOf(d.cat))}</span><select class="mcat" aria-label="Category">${catOpts(catOf(d.cat).id)}</select><input class="ntitle" type="text" placeholder="Title, e.g. SP6 final numbers" value="${esc(d.title || '')}"></div>
+        <textarea rows="2" class="mnew" placeholder="Details (optional). Type - and a space for dot points.">${esc(d.text || '')}</textarea>
+        <div class="mrow"><select class="madv" aria-label="Adviser">${advOpts}</select>${t.id === 'act' ? `<select class="mowner" aria-label="Owner"><option value="">Owner</option>${MANAGERS.map(m => `<option value="${m.name}">${m.name}</option>`).join('')}</select>` : ''}<button class="madd-btn">Add ${t.one.toLowerCase()}</button></div>
+      </div>
+      <div class="cards">${list.length ? list.map(i => meetItemHtml(i, t)).join('') : '<div class="mempty">Nothing yet this week</div>'}</div>`;
     bindMeet(el);
   });
   const rv = document.getElementById('view-risk');
@@ -1002,29 +1087,44 @@ function renderMeet(){
 function bindMeet(body){
   body.querySelectorAll('.madd').forEach(box => {
     const type = box.dataset.type, d = mdrafts[type] = mdrafts[type] || {};
-    const ta = box.querySelector('.mnew'), adv = box.querySelector('.madv'), own = box.querySelector('.mowner');
+    const ta = box.querySelector('.mnew'), adv = box.querySelector('.madv'), own = box.querySelector('.mowner'), ti = box.querySelector('.ntitle'), cat = box.querySelector('.mcat');
     adv.value = d.adv || ''; if(own) own.value = d.owner || '';
     fit(ta);
     ta.addEventListener('input', () => { d.text = ta.value; fit(ta); });
     ta.addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); meetAdd(type); } });
+    ti.addEventListener('input', () => { d.title = ti.value; });
+    ti.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); meetAdd(type); } });
+    cat.addEventListener('change', () => { d.cat = cat.value; const c = catOf(cat.value); box.className = `madd newcard cat-${c.id}`; box.querySelector('.cic').innerHTML = catIcon(c); });
     adv.addEventListener('change', () => { d.adv = adv.value; });
     if(own) own.addEventListener('change', () => { d.owner = own.value; });
     box.querySelector('.madd-btn').onclick = () => meetAdd(type);
   });
   body.querySelectorAll('[data-mdone]').forEach(c => c.onchange = () => meetPatch(c.dataset.mdone, {done:c.checked}));
-  body.querySelectorAll('[data-mans]').forEach(inp => inp.addEventListener('change', () => meetPatch(inp.dataset.mans, {answer:inp.value, answeredBy:me || ''})));
   body.querySelectorAll('[data-mdel]').forEach(b => b.onclick = () => meetDelete(b.dataset.mdel));
+  body.querySelectorAll('[data-mcat]').forEach(s => s.onchange = () => { s.blur(); meetPatch(s.dataset.mcat, {cat:s.value}); });
   body.querySelectorAll('[data-mtpown]').forEach(s => s.onchange = () => { s.blur(); meetPatch(s.dataset.mtpown, {owner:s.value}); });
   body.querySelectorAll('[data-mown]').forEach(s => s.onchange = () => { s.blur(); meetPatch(s.dataset.mown, {owner:s.value}); });
   body.querySelectorAll('[data-mtoact]').forEach(c => c.onchange = () => { if(!c.checked) return; c.blur(); const item = (meet[iso(week)] || {})[c.dataset.mtoact] || {}; meetPatch(c.dataset.mtoact, {type:'act', done:false, fromTp:true, owner:item.owner || ''}).then(() => setSave('Moved to Actions')); });
-  body.querySelectorAll('[data-medit]').forEach(ta => { fit(ta); ta.addEventListener('input', () => { fit(ta); const wk = iso(week), id = ta.dataset.medit, item = (meet[wk] || {})[id]; if(!item) return; item.text = valOf(ta); setSave('Saving...'); clearTimeout(rTimers['m' + id]); rTimers['m' + id] = setTimeout(() => { if(!textOf(valOf(ta)).trim()) return; meetPatch(id, {text:valOf(ta), editedBy:me || '', editedAt:new Date().toISOString()}); }, 700); }); });
+  body.querySelectorAll('[data-mtitle]').forEach(h => {
+    h.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); h.blur(); } });
+    h.addEventListener('paste', e => { e.preventDefault(); e.stopImmediatePropagation(); document.execCommand('insertText', false, (e.clipboardData.getData('text/plain') || '').replace(/\s+/g, ' ')); }, true);
+    h.addEventListener('input', () => {
+      const wk = iso(week), id = h.dataset.mtitle, item = (meet[wk] || {})[id];
+      if(!item) return;
+      item.title = h.textContent.trim();
+      setSave('Saving...');
+      clearTimeout(rTimers['t' + id]);
+      rTimers['t' + id] = setTimeout(() => meetPatch(id, {title:item.title, editedBy:me || '', editedAt:new Date().toISOString()}), 700);
+    });
+  });
+  body.querySelectorAll('[data-medit]').forEach(ta => { fit(ta); ta.addEventListener('input', () => { fit(ta); const wk = iso(week), id = ta.dataset.medit, item = (meet[wk] || {})[id]; if(!item) return; item.text = valOf(ta); setSave('Saving...'); clearTimeout(rTimers['m' + id]); rTimers['m' + id] = setTimeout(() => { if(!textOf(valOf(ta)).trim() && !item.title) return; meetPatch(id, {text:valOf(ta), editedBy:me || '', editedAt:new Date().toISOString()}); }, 700); }); });
 }
 async function meetAdd(type){
   const wk = iso(week), d = mdrafts[type] || {};
-  const text = String(d.text || '').trim();
-  if(!text) return;
+  const text = String(d.text || '').trim(), title = String(d.title || '').trim();
+  if(!text && !title) return;
   if(!me){ setSave('Choose your name first', true); document.getElementById('me').focus(); return; }
-  const item = {type, text, by:me, at:new Date().toISOString()};
+  const item = {type, text, title, cat:catOf(d.cat).id, by:me, at:new Date().toISOString()};
   if(d.adv) item.adviser = d.adv;
   if(type === 'act' && d.owner) item.owner = d.owner;
   try{
@@ -1032,7 +1132,7 @@ async function meetAdd(type){
     if(!r.ok) throw new Error(r.status);
     const {name} = await r.json();
     (meet[wk] = meet[wk] || {})[name] = item;
-    mdrafts[type] = {};
+    mdrafts[type] = {cat:item.cat};
     setSave('Added');
     if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
     render();
