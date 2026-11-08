@@ -398,6 +398,26 @@ thead tr.grp th{letter-spacing:.06em}
 .alert .who{font-family:var(--display);font-size:15px}
 .alert ul{color:var(--muted)}
 .alert ul b{color:var(--sc)}
+.rcard{--cc:var(--pc);--cbg:var(--pcs)}
+.rpart.mbs .rcard .cic{color:var(--mbs)}
+.rpart.unsw .rcard .cic{color:#9a7400}
+.rtag{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rsec{display:grid;gap:2px;border-top:1px dashed var(--line);padding-top:6px}
+.rlab{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+.rsec .rich{font-size:13px;color:#4a4e56;margin-left:-8px;padding:3px 8px}
+.rsec .rich-ed{min-height:24px}
+.rnone{font-size:12px;color:var(--faint)}
+.rph h3{display:flex;align-items:baseline;gap:10px;font-size:20px}
+.rcount{font-family:var(--sans);font-size:12px;font-weight:500;color:var(--muted)}
+.rpart .cards{border-top:3px solid var(--pc)}
+.rold{opacity:.7;background:var(--field)}
+.rprevcards{background:transparent;border:0;padding:8px 0 0}
+details.rprev{margin-top:2px}
+.rpart + .rpart{margin-top:28px}
+.card > *{min-width:0;max-width:100%}
+.rsec{grid-template-columns:minmax(0,1fr)}
+.rsec > *,.cbody > *{min-width:0;max-width:100%}
+.card .rich-tw{max-width:100%;overflow-x:auto}
 </style>
 </head>
 <body>
@@ -488,22 +508,30 @@ const rTimers = {};
 let focusRisk = null;
 function riskRows(wk, pid){ return Object.entries(((risk[wk] || {})[pid]) || {}).filter(([, v]) => v && typeof v === 'object').map(([id, v]) => Object.assign({id}, v)).sort((x, y) => String(x.at).localeCompare(String(y.at))); }
 function riskCount(wk){ return PARTNERS.reduce((n, p) => n + riskRows(wk, p.id).length, 0); }
+const RISK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4"/><path d="M12 17h.01"/></svg>';
 function riskHtml(){
   const wk = iso(week), pw = iso(addDays(week, -7));
-  const head = edit => `<thead><tr><th class="rn">#</th>${RHEADS.map(h => `<th>${h.label}</th>`).join('')}${edit ? '<th class="rx"><span class="sr">Remove</span></th>' : ''}</tr></thead>`;
-  const table = (p, w, edit) => {
-    const rows = riskRows(w, p.id);
-    const body = rows.length ? rows.map((r, i) => `<tr data-rid="${esc(r.id)}"><td class="rn">${i + 1}</td>${RHEADS.map(h => edit
-      ? `<td>${richEdit(r[h.f], `<textarea rows="2" data-risk="${h.f}" data-rp="${p.id}" data-rid="${esc(r.id)}" aria-label="${p.book} risk ${i + 1}: ${h.label}" placeholder="Free text">${esc(r[h.f] || '')}</textarea>`)}</td>`
-      : `<td>${String(r[h.f] || '').trim() ? `<div class="rich rich-ro">${toHtml(r[h.f])}</div>` : '<span class="mempty">None</span>'}</td>`).join('')}${edit ? `<td class="rx"><button class="rdel" data-rdel="${esc(r.id)}" data-rp="${p.id}" aria-label="Remove ${p.book} risk ${i + 1}" title="Remove this risk">&times;</button></td>` : ''}</tr>`).join('')
-      : `<tr><td class="rempty" colspan="${RHEADS.length + (edit ? 2 : 1)}">${edit ? 'No risks added yet' : 'No risks recorded'}</td></tr>`;
-    return `<div class="rtable ${p.id} ${edit ? '' : 'prev'}"><table>${head(edit)}<tbody>${body}</tbody></table></div>`;
+  const card = (p, r, i, edit) => {
+    const ed = (f, label, ph) => edit
+      ? richEdit(r[f], `<textarea rows="2" data-risk="${f}" data-rp="${p.id}" data-rid="${esc(r.id)}" aria-label="${p.book} risk ${i + 1}: ${label}" placeholder="${ph}">${esc(r[f] || '')}</textarea>`)
+      : (String(r[f] || '').trim() ? `<div class="rich rich-ro">${toHtml(r[f])}</div>` : '<div class="rnone">None</div>');
+    const title = edit
+      ? `<h3 class="ctitle" contenteditable="true" data-rtitle="${esc(r.id)}" data-rp="${p.id}" data-ph="Name this risk">${esc(r.title || '')}</h3>`
+      : (r.title ? `<h3 class="ctitle">${esc(r.title)}</h3>` : '');
+    return `<article class="card rcard ${edit ? '' : 'rold'}">
+      <div class="ch"><span class="cic">${RISK_ICON}</span><span class="rtag">Risk ${i + 1}</span>${edit ? `<button class="mdel" data-rdel="${esc(r.id)}" data-rp="${p.id}" aria-label="Remove ${p.book} risk ${i + 1}">Remove</button>` : ''}</div>
+      ${title}
+      <div class="cbody">${ed('risks', 'Details', 'Add details')}</div>
+      <div class="rsec"><span class="rlab">What we're doing</span>${ed('mitigation', 'What we are doing', 'Add what we are doing')}</div>
+      <div class="rsec"><span class="rlab">Escalation or support</span>${ed('escalate', 'Escalation or support needed', 'Add anything to escalate')}</div>
+      <div class="cby">${esc(String(r.by || '').split(' ')[0])}${r.at ? ' &middot; ' + esc(when(r.at)) : ''}${r.updatedBy ? ' &middot; edited by ' + esc(String(r.updatedBy).split(' ')[0]) : ''}</div>
+    </article>`;
   };
   return PARTNERS.map(p => {
-    const prev = riskRows(pw, p.id);
-    return `<section class="rpart ${p.id}"><div class="rph"><h3>${p.name}</h3><button class="radd" data-radd="${p.id}">+ Add risk</button></div>
-      ${table(p, wk, true)}
-      <details class="rprev" ${prev.length ? 'open' : ''}><summary>Last week, ${esc(fmt(addDays(week, -7)))} (${prev.length} ${prev.length === 1 ? 'risk' : 'risks'})</summary>${table(p, pw, false)}</details>
+    const rows = riskRows(wk, p.id), prev = riskRows(pw, p.id);
+    return `<section class="rpart ${p.id}"><div class="rph"><h3>${p.name}<span class="rcount">${rows.length} ${rows.length === 1 ? 'risk' : 'risks'}</span></h3><button class="radd" data-radd="${p.id}">+ Add risk</button></div>
+      <div class="cards">${rows.length ? rows.map((r, i) => card(p, r, i, true)).join('') : '<div class="mempty">No risks added yet</div>'}</div>
+      <details class="rprev" ${prev.length ? '' : ''}><summary>Last week, ${esc(fmt(addDays(week, -7)))} (${prev.length} ${prev.length === 1 ? 'risk' : 'risks'})</summary>${prev.length ? `<div class="cards rprevcards">${prev.map((r, i) => card(p, r, i, false)).join('')}</div>` : '<div class="mempty">No risks recorded</div>'}</details>
     </section>`;
   }).join('');
 }
@@ -530,14 +558,32 @@ function bindRisk(body){
       }, 700);
     });
   });
+  body.querySelectorAll('[data-rtitle]').forEach(h => {
+    h.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); h.blur(); } });
+    h.addEventListener('paste', e => { e.preventDefault(); document.execCommand('insertText', false, (e.clipboardData.getData('text/plain') || '').replace(/s+/g, ' ')); });
+    h.addEventListener('input', () => {
+      const wk = iso(week), pid = h.dataset.rp, id = h.dataset.rtitle, row = ((risk[wk] || {})[pid] || {})[id];
+      if(!row) return;
+      row.title = h.textContent.trim();
+      setSave('Saving...');
+      clearTimeout(rTimers['rt' + id]);
+      rTimers['rt' + id] = setTimeout(async () => {
+        try{
+          const res = await fetch(`${DBR}/${wk}/${pid}/${id}.json`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title:row.title, updatedBy:me || '', updatedAt:new Date().toISOString()})});
+          if(!res.ok) throw new Error(res.status);
+          setSave('Saved');
+        }catch(e){ setSave('Not saved', true); }
+      }, 700);
+    });
+  });
   body.querySelectorAll('[data-radd]').forEach(b => b.onclick = () => riskAdd(b.dataset.radd));
   body.querySelectorAll('[data-rdel]').forEach(b => b.onclick = () => riskDelete(b.dataset.rp, b.dataset.rdel));
-  if(focusRisk){ const el = body.querySelector(`textarea[data-rid="${focusRisk}"]`); focusRisk = null; if(el) el.focus(); }
+  if(focusRisk){ const el = body.querySelector(`[data-rtitle="${focusRisk}"]`); focusRisk = null; if(el) el.focus(); }
 }
 async function riskAdd(pid){
   const wk = iso(week);
   if(!me){ setSave('Choose your name first', true); document.getElementById('me').focus(); return; }
-  const row = {risks:'', mitigation:'', escalate:'', by:me, at:new Date().toISOString()};
+  const row = {title:'', risks:'', mitigation:'', escalate:'', by:me, at:new Date().toISOString()};
   try{
     const res = await fetch(`${DBR}/${wk}/${pid}.json`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(row)});
     if(!res.ok) throw new Error(res.status);
