@@ -474,8 +474,8 @@ details.rprev{margin-top:2px}
   <div id="partners" style="display:grid;gap:34px"></div>
 
   <div class="legend">
-    <span><i class="sw" style="background:var(--ok)"></i>On track: meets call attempts (or has 38+ STS), vCITA and all three 60-day KPIs</span>
-    <span><i class="sw" style="background:var(--watch)"></i>Watch: below on call attempts, vCITA or a 60-day KPI; carries into the next week until figures are entered</span>
+    <span><i class="sw" style="background:var(--ok)"></i>On track: meets call attempts (38+ STS counts) or vCITA, and all three 60-day KPIs</span>
+    <span><i class="sw" style="background:var(--watch)"></i>Watch: below on both call attempts and vCITA, or below on any 60-day KPI; carries into the next week until figures are entered</span>
     <span><i class="sw" style="background:var(--flag)"></i>Flag: two weeks in a row on Watch; stays until a week meets everything</span>
     <span><i class="sw" style="background:var(--ovr)"></i>Override: takes them off Needs attention only; their status still counts</span>
     <span><i class="sw" style="background:var(--faint)"></i>Contact rate is for information only</span>
@@ -788,8 +788,8 @@ function baseOf(r, adv){
   if(days === 0) return {base:'leave', reasons};
   if(days !== null){
     const a = num(r.attempts), v = num(r.vcita);
-    if(a !== null && a < t.att * days && !stsCovers(r, adv)) reasons.watch.push(`Call attempts ${a} of ${t.att * days} expected (${days} days)`);
-    if(v !== null && v < t.vc * days) reasons.watch.push(`vCITA calls ${v} of ${t.vc * days} expected (${days} days)`);
+    const shortCalls = a !== null && a < t.att * days && !stsCovers(r, adv), shortV = v !== null && v < t.vc * days;
+    if(shortCalls && shortV){ reasons.watch.push(`Call attempts ${a} of ${t.att * days} expected (${days} days)`); reasons.watch.push(`vCITA calls ${v} of ${t.vc * days} expected (${days} days)`); }
   }
   ['att','con','t12'].forEach(k => { const v = num(r[k]); if(v !== null && v < KPI[k].floor) reasons.watch.push(`${KPI[k].label} ${v}% (below ${KPI[k].floor}%)`); });
   const missing = days === null || num(r.attempts) === null || num(r.vcita) === null;
