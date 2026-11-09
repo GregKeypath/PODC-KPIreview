@@ -418,6 +418,15 @@ details.rprev{margin-top:2px}
 .rsec{grid-template-columns:minmax(0,1fr)}
 .rsec > *,.cbody > *{min-width:0;max-width:100%}
 .card .rich-tw{max-width:100%;overflow-x:auto}
+.idea{--cc:#5d636c;--cbg:#eceef1}
+.ps-parked{--cc:#5d636c;--cbg:#eceef1}
+.ps-exploring{--cc:#3d68cc;--cbg:#e7edfb}
+.ps-doing{--cc:#9a7400;--cbg:#fff1c2}
+.ps-done{--cc:#1f9461;--cbg:#e1f5ea}
+.ps-dropped{--cc:#a2a4aa;--cbg:#f0efeb}
+.card.ps-done,.card.ps-dropped{opacity:.6}
+.card.ps-dropped .ctitle{text-decoration:line-through}
+.newcard .mrow .mhint{flex:1;align-self:center;margin:0}
 </style>
 </head>
 <body>
@@ -452,6 +461,8 @@ details.rprev{margin-top:2px}
     <button class="navi" data-go="tp" style="--nc:var(--blue)"><i></i>Talking points<b></b></button>
     <button class="navi" data-go="act" style="--nc:var(--green)"><i></i>Actions<b></b></button>
     <button class="navi" data-go="mn" style="--nc:var(--exc)"><i></i>Meeting notes<b></b></button>
+    <p class="side-label">Ideas</p>
+    <button class="navi" data-go="park" style="--nc:var(--orange)"><i></i>Crazy 8's<b></b></button>
     <p class="side-label">Friday</p>
     <button class="navi" data-go="risk" style="--nc:var(--red)"><i></i>Risk review<b></b></button>
     <p class="side-label">Performance</p>
@@ -461,6 +472,7 @@ details.rprev{margin-top:2px}
     <section class="mview msec tp" id="view-tp" data-view="tp"></section>
     <section class="mview msec act" id="view-act" data-view="act" hidden></section>
     <section class="mview msec mn" id="view-mn" data-view="mn" hidden></section>
+    <section class="mview msec park" id="view-park" data-view="park" hidden></section>
     <section class="mview msec rr" id="view-risk" data-view="risk" hidden></section>
 <div class="wrap" id="view-kpi" data-view="kpi" hidden>
   <section class="overview" id="overview"></section>
@@ -497,6 +509,81 @@ const MTYPES = [
 let meet = {};
 const mdrafts = {};
 let mDirty = false;
+const DBP = ROOT + '/podc_parking';
+const PSTAT = [
+  {id:'parked', label:'Parked'},
+  {id:'exploring', label:'Exploring'},
+  {id:'doing', label:'Doing'},
+  {id:'done', label:'Done'},
+  {id:'dropped', label:'Dropped'}
+];
+const IDEA_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.8V16h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3z"/></svg>';
+let park = {};
+const pdraft = {};
+const pstatOf = id => PSTAT.find(p => p.id === id) || PSTAT[0];
+function parkItems(){ return Object.entries(park || {}).filter(([, v]) => v && typeof v === 'object').map(([id, v]) => Object.assign({id}, v)).sort((x, y) => { const rank = s => (s === 'done' || s === 'dropped') ? 1 : 0; return rank(x.status) - rank(y.status) || String(y.at).localeCompare(String(x.at)); }); }
+function parkActive(){ return parkItems().filter(i => i.status !== 'done' && i.status !== 'dropped').length; }
+function parkCard(i){
+  const st = pstatOf(i.status);
+  return `<article class="card idea ps-${st.id}">
+    <div class="ch"><span class="cic">${IDEA_ICON}</span><select class="ccat" data-pstat="${esc(i.id)}" aria-label="Status">${PSTAT.map(p => `<option value="${p.id}" ${p.id === st.id ? 'selected' : ''}>${p.label}</option>`).join('')}</select>${i.by === me ? `<button class="mdel" data-pdel="${esc(i.id)}" aria-label="Remove idea">Remove</button>` : ''}</div>
+    <h3 class="ctitle" contenteditable="true" data-ptitle="${esc(i.id)}" data-ph="Name this idea">${esc(i.title || '')}</h3>
+    <div class="cbody">${richEdit(i.text, `<textarea rows="1" data-pedit="${esc(i.id)}" aria-label="Idea details" placeholder="Add details">${esc(i.text || '')}</textarea>`)}</div>
+    <div class="cby">${esc(String(i.by || '').split(' ')[0])} &middot; ${esc(when(i.at))}${i.editedBy ? ` &middot; edited by ${esc(String(i.editedBy).split(' ')[0])}` : ''}</div>
+  </article>`;
+}
+function parkHtml(){
+  const list = parkItems();
+  return `<div class="vhead"><h2>Crazy 8's parking lot</h2><p>Ideas from our Crazy 8's sessions. They stay here week to week until we move them on. <span class="vweek">${parkActive()} active</span></p></div>
+    ${me ? '' : '<div class="mwho">Choose your name in "Commenting as" at the top before adding anything.</div>'}
+    <div class="madd newcard idea ps-parked" data-park="1">
+      <div class="nrow"><span class="cic">${IDEA_ICON}</span><select class="mcat pnstat" aria-label="Status">${PSTAT.map(p => `<option value="${p.id}" ${(pdraft.status || 'parked') === p.id ? 'selected' : ''}>${p.label}</option>`).join('')}</select><input class="ntitle pntitle" type="text" placeholder="The idea in a few words" value="${esc(pdraft.title || '')}"></div>
+      <textarea rows="2" class="mnew pntext" placeholder="Details (optional). Type - and a space for dot points.">${esc(pdraft.text || '')}</textarea>
+      <div class="mrow"><span class="mhint">Tiles stay here across weeks.</span><button class="madd-btn pnadd">Add idea</button></div>
+    </div>
+    <div class="cards">${list.length ? list.map(parkCard).join('') : '<div class="mempty">No ideas parked yet</div>'}</div>`;
+}
+async function parkSave(method, path, body){
+  const r = await fetch(`${DBP}${path}.json`, {method, headers:{'Content-Type':'application/json'}, body:body ? JSON.stringify(body) : undefined});
+  if(!r.ok) throw new Error(r.status);
+  return method === 'POST' ? r.json() : null;
+}
+async function parkAdd(){
+  const title = String(pdraft.title || '').trim(), text = String(pdraft.text || '').trim();
+  if(!title && !text) return;
+  if(!me){ setSave('Choose your name first', true); document.getElementById('me').focus(); return; }
+  const item = {title, text, status:pdraft.status || 'parked', by:me, at:new Date().toISOString()};
+  try{
+    const {name} = await parkSave('POST', '', item);
+    park[name] = item;
+    Object.keys(pdraft).forEach(k => delete pdraft[k]);
+    setSave('Idea added');
+    if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    renderMeet();
+  }catch(e){ setSave('Not added', true); }
+}
+function bindPark(body){
+  const box = body.querySelector('[data-park]');
+  if(box){
+    const ti = box.querySelector('.pntitle'), ta = box.querySelector('.pntext'), st = box.querySelector('.pnstat');
+    fit(ta);
+    ti.addEventListener('input', () => { pdraft.title = ti.value; });
+    ti.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); parkAdd(); } });
+    ta.addEventListener('input', () => { pdraft.text = ta.value; fit(ta); });
+    ta.addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); parkAdd(); } });
+    st.addEventListener('change', () => { pdraft.status = st.value; box.className = `madd newcard idea ps-${st.value}`; });
+    box.querySelector('.pnadd').onclick = parkAdd;
+  }
+  const patch = (id, p) => { Object.assign(park[id], p); setSave('Saving...'); return parkSave('PATCH', '/' + id, p).then(() => setSave('Saved')).catch(() => setSave('Not saved', true)); };
+  body.querySelectorAll('[data-pstat]').forEach(s => s.onchange = () => { s.blur(); patch(s.dataset.pstat, {status:s.value}).then(renderMeet); });
+  body.querySelectorAll('[data-pdel]').forEach(b => b.onclick = () => { const id = b.dataset.pdel; parkSave('DELETE', '/' + id).then(() => { delete park[id]; setSave('Idea removed'); renderMeet(); }).catch(() => setSave('Could not remove', true)); });
+  body.querySelectorAll('[data-ptitle]').forEach(h => {
+    h.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); h.blur(); } });
+    h.addEventListener('paste', e => { e.preventDefault(); document.execCommand('insertText', false, (e.clipboardData.getData('text/plain') || '').replace(/\s+/g, ' ')); });
+    h.addEventListener('input', () => { const id = h.dataset.ptitle; if(!park[id]) return; park[id].title = h.textContent.trim(); clearTimeout(rTimers['p' + id]); rTimers['p' + id] = setTimeout(() => patch(id, {title:park[id].title, editedBy:me || '', editedAt:new Date().toISOString()}), 700); });
+  });
+  body.querySelectorAll('[data-pedit]').forEach(ed => ed.addEventListener('input', () => { const id = ed.dataset.pedit; if(!park[id]) return; park[id].text = valOf(ed); clearTimeout(rTimers['pe' + id]); rTimers['pe' + id] = setTimeout(() => patch(id, {text:park[id].text, editedBy:me || '', editedAt:new Date().toISOString()}), 700); }));
+}
 const DBR = ROOT + '/weekly_risk';
 const RHEADS = [
   {f:'risks', label:'Risk'},
@@ -711,8 +798,8 @@ async function load(quiet){
   if(store){ render(); return; }
   if(!quiet) setSave('Loading...');
   try{
-    const [r, c, m, rk] = await Promise.all([fetch(DB + '.json', {cache:'no-store'}), fetch(DBC + '.json', {cache:'no-store'}), fetch(DBM + '.json', {cache:'no-store'}), fetch(DBR + '.json', {cache:'no-store'})]);
-    if(!r.ok || !c.ok || !m.ok || !rk.ok) throw new Error('load');
+    const [r, c, m, rk, pk] = await Promise.all([fetch(DB + '.json', {cache:'no-store'}), fetch(DBC + '.json', {cache:'no-store'}), fetch(DBM + '.json', {cache:'no-store'}), fetch(DBR + '.json', {cache:'no-store'}), fetch(DBP + '.json', {cache:'no-store'})]);
+    if(!r.ok || !c.ok || !m.ok || !rk.ok || !pk.ok) throw new Error('load');
     const next = (await r.json()) || {};
     pending.forEach(id => { const [wk, k] = id.split('|'); if(all[wk] && all[wk][k]) (next[wk] = next[wk] || {})[k] = all[wk][k]; });
     all = next;
@@ -725,6 +812,7 @@ async function load(quiet){
     comments = cm;
     meet = (await m.json()) || {};
     risk = (await rk.json()) || {};
+    park = (await pk.json()) || {};
     if(!quiet) setSave('');
   }catch(e){ setSave('Could not load', true); }
   refresh();
@@ -1114,6 +1202,7 @@ function renderMeet(){
     document.querySelector(`.navi[data-go="${t.id}"] b`).textContent = n || '';
   });
   document.querySelector('.navi[data-go="risk"] b').textContent = riskCount(wk) || '';
+  document.querySelector('.navi[data-go="park"] b').textContent = parkActive() || '';
   if(inMeet()){ mDirty = true; return; }
   const who = me ? '' : '<div class="mwho">Choose your name in "Commenting as" at the top before adding anything.</div>';
   const advOpts = '<option value="">No adviser</option>' + ADVISERS.map(a => `<option value="${key(a.name)}">${esc(a.name)}</option>`).join('');
@@ -1130,6 +1219,9 @@ function renderMeet(){
       <div class="cards">${list.length ? list.map(i => meetItemHtml(i, t)).join('') : '<div class="mempty">Nothing yet this week</div>'}</div>`;
     bindMeet(el);
   });
+  const pv = document.getElementById('view-park');
+  pv.innerHTML = parkHtml();
+  bindPark(pv);
   const rv = document.getElementById('view-risk');
   rv.innerHTML = vhead('Friday risk review', DESC.risk) + riskHtml();
   bindRisk(rv);
