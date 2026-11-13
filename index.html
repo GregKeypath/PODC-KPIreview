@@ -467,6 +467,36 @@ h1{font-size:27px;background:linear-gradient(90deg,#e23950,#fd7a3a 30%,#6a5be0 7
 .alert{border-left-width:6px}
 .confetti{position:fixed;width:8px;height:12px;border-radius:2px;pointer-events:none;z-index:999;animation:conf .9s ease-out forwards}
 @keyframes conf{to{transform:translate(var(--dx),var(--dy)) rotate(var(--r));opacity:0}}
+.navi i{width:auto;height:auto;background:none!important;border-radius:0;font-style:normal;font-size:17px;line-height:1;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.navi.on i{box-shadow:none}
+.navi:hover i,.navi.on i{transform:scale(1.25) rotate(-10deg)}
+.navi[data-go=tp] i::before{content:"💬"}.navi[data-go=act] i::before{content:"✅"}.navi[data-go=mn] i::before{content:"📝"}
+.navi[data-go=park] i::before{content:"💡"}.navi[data-go=risk] i::before{content:"🚨"}.navi[data-go=kpi] i::before{content:"📊"}
+.vhead h2::before{width:auto;height:auto;background:none;box-shadow:none;border-radius:0;font-size:28px;display:inline-block;animation:bob 3s ease-in-out infinite}
+.msec.tp .vhead h2::before{content:"💬"}.msec.act .vhead h2::before{content:"✅"}.msec.mn .vhead h2::before{content:"📝"}.msec.park .vhead h2::before{content:"💡"}
+.msec.rr .vhead h2::before{content:"🚨"}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-4px) rotate(-6deg)}}
+.stat .l::before{margin-right:4px}
+.stat.flag .l::before{content:"🚩"}.stat.watch .l::before{content:"👀"}.stat.ok .l::before{content:"🌟"}.stat.plan .l::before{content:"📋"}
+.cards > .card:nth-child(3n+1){transform:rotate(-.7deg)}
+.cards > .card:nth-child(3n+2){transform:rotate(.5deg)}
+.cards > .card:nth-child(3n){transform:rotate(-.3deg)}
+.cards > .card:hover{transform:translateY(-4px) rotate(0) scale(1.02)!important;z-index:2}
+.card::after{content:"";position:absolute;top:-9px;left:50%;width:54px;height:16px;margin-left:-27px;background:color-mix(in srgb,var(--cc) 30%,#fff);opacity:.75;transform:rotate(-3deg);border-radius:2px}
+.card{position:relative}
+.cards > .mempty{font-size:15px;color:var(--muted)}
+.empty.yay{background:linear-gradient(90deg,#e3f8ef,#efedff,#fff3bf);color:var(--ink);font-weight:600;border:0}
+.hero{overflow:hidden}
+.floaty{position:absolute;pointer-events:none;font-size:var(--s);opacity:.55;animation:floaty var(--d) ease-in-out infinite;animation-delay:var(--dl)}
+@keyframes floaty{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-10px) rotate(18deg)}}
+.heroin{position:relative;z-index:1}
+h1.split{background:none;color:var(--ink)}
+h1 .lt{display:inline-block;color:var(--c)}
+h1{cursor:default}
+h1:hover .lt{animation:wave .6s ease-in-out;animation-delay:calc(var(--i) * 40ms)}
+@keyframes wave{40%{transform:translateY(-6px) rotate(-6deg)}}
+.vibe{font-size:12px;color:var(--muted);text-align:center;padding:18px 0 28px}
+@media (prefers-reduced-motion:reduce){.floaty,.vhead h2::before,h1:hover .lt{animation:none}}
 @media (prefers-reduced-motion:reduce){.card:hover,.stat:hover,.navi:hover{transform:none}.mtick:has(input:checked){animation:none}.confetti{display:none}}
 </style>
 </head>
@@ -582,7 +612,7 @@ function parkHtml(){
       <textarea rows="2" class="mnew pntext" placeholder="Details (optional). Type - and a space for dot points.">${esc(pdraft.text || '')}</textarea>
       <div class="mrow"><span class="mhint">Tiles stay here across weeks.</span><button class="madd-btn pnadd">Add idea</button></div>
     </div>
-    <div class="cards">${list.length ? list.map(parkCard).join('') : '<div class="mempty">No ideas parked yet</div>'}</div>`;
+    <div class="cards">${list.length ? list.map(parkCard).join('') : '<div class="mempty">No ideas parked yet. Dream big 💭</div>'}</div>`;
 }
 async function parkSave(method, path, body){
   const r = await fetch(`${DBP}${path}.json`, {method, headers:{'Content-Type':'application/json'}, body:body ? JSON.stringify(body) : undefined});
@@ -658,7 +688,7 @@ function riskHtml(){
   return PARTNERS.map(p => {
     const rows = riskRows(wk, p.id), prev = riskRows(pw, p.id);
     return `<section class="rpart ${p.id}"><div class="rph"><h3>${p.name}<span class="rcount">${rows.length} ${rows.length === 1 ? 'risk' : 'risks'}</span></h3><button class="radd" data-radd="${p.id}">+ Add risk</button></div>
-      <div class="cards">${rows.length ? rows.map((r, i) => card(p, r, i, true)).join('') : '<div class="mempty">No risks added yet</div>'}</div>
+      <div class="cards">${rows.length ? rows.map((r, i) => card(p, r, i, true)).join('') : '<div class="mempty">No risks added yet. Smooth sailing ⛵</div>'}</div>
       <details class="rprev" ${prev.length ? '' : ''}><summary>Last week, ${esc(fmt(addDays(week, -7)))} (${prev.length} ${prev.length === 1 ? 'risk' : 'risks'})</summary>${prev.length ? `<div class="cards rprevcards">${prev.map((r, i) => card(p, r, i, false)).join('')}</div>` : '<div class="mempty">No risks recorded</div>'}</details>
     </section>`;
   }).join('');
@@ -1089,7 +1119,7 @@ function render(){
       </div>`).join('')
     : ADVISERS.every(a => !hasData(rec(wk, a)))
       ? '<div class="empty">No figures entered for this week yet. Type each adviser\'s numbers into the tables below and they save as you go.</div>'
-      : '<div class="empty">Nobody is below expectation this week.</div>';
+      : '<div class="empty yay">🎉 Nobody is below expectation this week. Go team!</div>';
 
 
   renderMeet();
@@ -1257,7 +1287,7 @@ function renderMeet(){
         <textarea rows="2" class="mnew" placeholder="Details (optional). Type - and a space for dot points.">${esc(d.text || '')}</textarea>
         <div class="mrow"><select class="madv" aria-label="Adviser">${advOpts}</select>${t.id === 'act' ? `<select class="mowner" aria-label="Owner"><option value="">Owner</option>${MANAGERS.map(m => `<option value="${m.name}">${m.name}</option>`).join('')}</select>` : ''}<button class="madd-btn">Add ${t.one.toLowerCase()}</button></div>
       </div>
-      <div class="cards">${list.length ? list.map(i => meetItemHtml(i, t)).join('') : '<div class="mempty">Nothing yet this week</div>'}</div>`;
+      <div class="cards">${list.length ? list.map(i => meetItemHtml(i, t)).join('') : '<div class="mempty">Nothing yet this week. Suspiciously quiet 🌴</div>'}</div>`;
     bindMeet(el);
   });
   const pv = document.getElementById('view-park');
@@ -1478,6 +1508,31 @@ init();
   const el = document.getElementById('hello');
   if (el) el.textContent = 'Pod C · ' + days[new Date().getDay()] + ' ✨';
   const cols = ['#fc4a62', '#fd9a5a', '#f8d94a', '#3cd39a', '#4a7bd8', '#6a5be0'];
+  const h1 = document.querySelector('.hero h1');
+  if (h1) {
+    const lc = ['#e23950', '#f2712e', '#d9a400', '#17a673', '#3d68cc', '#6a5be0'];
+    let k = 0;
+    h1.innerHTML = [...h1.textContent].map((ch, i) => ch === ' ' ? ' ' : `<span class="lt" style="--i:${i};--c:${lc[k++ % lc.length]}">${ch === '&' ? '&amp;' : ch}</span>`).join('');
+    h1.classList.add('split');
+  }
+  const hero = document.querySelector('.hero');
+  if (hero) {
+    [['✨', 18, 8, 30], ['⭐', 14, 34, 65], ['🎈', 20, 52, 15], ['💫', 16, 70, 60], ['🌈', 18, 86, 25], ['✨', 12, 95, 70]].forEach(([e, s, x, y], i) => {
+      const f = document.createElement('span');
+      f.className = 'floaty';
+      f.textContent = e;
+      f.style.cssText = `left:${x}%;top:${y}%;--s:${s}px;--d:${4 + i % 3}s;--dl:-${i * 0.7}s`;
+      hero.appendChild(f);
+    });
+  }
+  const vibes = ['Teamwork makes the dream work 🤝', 'Small wins are still wins 🏆', 'Coffee first, KPIs second ☕', 'You are doing great, honestly 💛', 'Every call counts 📞', 'Progress, not perfection 🌱', 'Students first, always 🎓'];
+  const main = document.querySelector('.main');
+  if (main) {
+    const v = document.createElement('p');
+    v.className = 'vibe';
+    v.textContent = vibes[Math.floor(Math.random() * vibes.length)];
+    main.appendChild(v);
+  }
   document.addEventListener('change', e => {
     const t = e.target;
     if (!t.matches || !t.matches('.mtick input[type=checkbox]') || !t.checked || t.closest('.mtoact')) return;
