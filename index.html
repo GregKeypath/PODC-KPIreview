@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pod C 1:1 Hub</title>
+<title>Carms &amp; Greg HQ</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -436,7 +436,7 @@ details.rprev{margin-top:2px}
       <svg viewBox="0 0 512 512" aria-hidden="true"><path d="M256 256L256 0A256 256 0 0 1 437 75Z" fill="#f8e46a"/><path d="M256 256L437 75A256 256 0 0 1 512 256Z" fill="#3cd39a"/><path d="M256 256L512 256A256 256 0 0 1 384 477.7Z" fill="#4a7bd8"/><path d="M256 256L384 477.7A256 256 0 0 1 0 256Z" fill="#0b5cb0"/><path d="M256 256L0 256A256 256 0 0 1 75 75Z" fill="#fc4a62"/><path d="M256 256L75 75A256 256 0 0 1 189.7 8.7Z" fill="#fd9a5a"/><path d="M256 256L189.7 8.7A256 256 0 0 1 256 0Z" fill="#fdbe74"/><circle cx="256" cy="256" r="168" fill="#e9e8fc"/><polyline points="205,200 255,250 382,124" fill="none" stroke="#4a76d6" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/><text x="256" y="350" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="96" letter-spacing="6" fill="#4a76d6">KPI</text></svg>
       <div>
         <p class="eyebrow">Pod C &middot; Student Success</p>
-        <h1>Weekly 1:1</h1>
+        <h1>Carms &amp; Greg HQ</h1>
       </div>
     </div>
     <div class="controls">
@@ -457,7 +457,7 @@ details.rprev{margin-top:2px}
 
 <div class="shell">
   <nav class="side" id="side" aria-label="Sections">
-    <p class="side-label">1:1 catch-up</p>
+    <p class="side-label">Catch-up</p>
     <button class="navi" data-go="tp" style="--nc:var(--blue)"><i></i>Talking points<b></b></button>
     <button class="navi" data-go="act" style="--nc:var(--green)"><i></i>Actions<b></b></button>
     <button class="navi" data-go="mn" style="--nc:var(--exc)"><i></i>Meeting notes<b></b></button>
@@ -1155,8 +1155,8 @@ function inMeet(){ const a = document.activeElement; return !!(a && a.closest &&
 function taggedHtml(wk, k){
   const list = meetItems(wk).filter(i => i.adviser === k);
   if(!list.length) return '';
-  const one = id => (MTYPES.find(t => t.id === id) || {}).one || '1:1';
-  return `<div class="tagged">${list.map(i => `<button class="tchip" data-openmeet="1" data-go="${i.type}" title="${esc(textOf(i.title || i.text))}">1:1 ${esc(one(i.type))}: ${esc(textOf(i.title || i.text).length > 60 ? textOf(i.title || i.text).slice(0, 60) + '...' : textOf(i.title || i.text))}</button>`).join('')}</div>`;
+  const one = id => (MTYPES.find(t => t.id === id) || {}).one || 'Item';
+  return `<div class="tagged">${list.map(i => `<button class="tchip" data-openmeet="1" data-go="${i.type}" title="${esc(textOf(i.title || i.text))}">${esc(one(i.type))}: ${esc(textOf(i.title || i.text).length > 60 ? textOf(i.title || i.text).slice(0, 60) + '...' : textOf(i.title || i.text))}</button>`).join('')}</div>`;
 }
 const CATS = [
   {id:'update', label:'Update', icon:'<path d="M3 10v4h4l5 4V6L7 10H3z"/><path d="M16 9a3 3 0 0 1 0 6"/><path d="M18.5 6.5a7 7 0 0 1 0 11"/>'},
