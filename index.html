@@ -498,6 +498,14 @@ h1:hover .lt{animation:wave .6s ease-in-out;animation-delay:calc(var(--i) * 40ms
 .vibe{font-size:12px;color:var(--muted);text-align:center;padding:18px 0 28px}
 @media (prefers-reduced-motion:reduce){.floaty,.vhead h2::before,h1:hover .lt{animation:none}}
 @media (prefers-reduced-motion:reduce){.card:hover,.stat:hover,.navi:hover{transform:none}.mtick:has(input:checked){animation:none}.confetti{display:none}}
+.agroup{display:grid;gap:10px}
+.agroup + .agroup{margin-top:22px}
+.msec .agroup h3.ahead{display:flex;align-items:center;gap:10px;font-family:var(--display);font-size:19px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--ink);margin:0}
+.msec .agroup h3.ahead::before{content:none}
+.adot{width:12px;height:12px;border-radius:50%;background:var(--ac)}
+.acount{font-family:var(--sans);font-size:12px;font-weight:500;color:var(--muted)}
+.agroup .cards{border-top:3px solid var(--ac)}
+.amuted h3.ahead{font-size:15px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -1264,6 +1272,16 @@ const DESC = {
 let view = 'tp';
 try{ const v = localStorage.getItem('podc_view'); if(v && document.querySelector(`[data-view="${v}"]`)) view = v; }catch(e){}
 function vhead(title, d){ return `<div class="vhead"><h2>${title}</h2><p>${d} <span class="vweek">Week of ${esc(fmt(week))}</span></p></div>`; }
+function actSections(list, t){
+  const groups = MANAGERS.map(m => ({label:m.name === 'Greg Banks' ? 'Greg’s actions' : 'Carms’ actions', colour:m.colour, items:list.filter(i => i.owner === m.name)}));
+  const none = list.filter(i => !MANAGERS.some(m => m.name === i.owner));
+  if(none.length) groups.push({label:'No owner yet', colour:'var(--faint)', items:none, muted:true});
+  return groups.map(g => {
+    const open = g.items.filter(i => !i.done).length;
+    return `<section class="agroup ${g.muted ? 'amuted' : ''}" style="--ac:${g.colour}"><h3 class="ahead"><span class="adot"></span>${g.label}<span class="acount">${open} open${g.items.length > open ? `, ${g.items.length - open} done` : ''}</span></h3>
+      <div class="cards">${g.items.length ? g.items.map(i => meetItemHtml(i, t)).join('') : '<div class="mempty">No actions this week</div>'}</div></section>`;
+  }).join('');
+}
 function renderMeet(){
   const wk = iso(week);
   const items = meetItems(wk);
@@ -1287,7 +1305,7 @@ function renderMeet(){
         <textarea rows="2" class="mnew" placeholder="Details (optional). Type - and a space for dot points.">${esc(d.text || '')}</textarea>
         <div class="mrow"><select class="madv" aria-label="Adviser">${advOpts}</select>${t.id === 'act' ? `<select class="mowner" aria-label="Owner"><option value="">Owner</option>${MANAGERS.map(m => `<option value="${m.name}">${m.name}</option>`).join('')}</select>` : ''}<button class="madd-btn">Add ${t.one.toLowerCase()}</button></div>
       </div>
-      <div class="cards">${list.length ? list.map(i => meetItemHtml(i, t)).join('') : '<div class="mempty">Nothing yet this week. Suspiciously quiet 🌴</div>'}</div>`;
+      ${t.id === 'act' ? actSections(list, t) : `<div class="cards">${list.length ? list.map(i => meetItemHtml(i, t)).join('') : '<div class="mempty">Nothing yet this week. Suspiciously quiet 🌴</div>'}</div>`}`;
     bindMeet(el);
   });
   const pv = document.getElementById('view-park');
