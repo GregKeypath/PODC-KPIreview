@@ -506,6 +506,7 @@ h1:hover .lt{animation:wave .6s ease-in-out;animation-delay:calc(var(--i) * 40ms
 .acount{font-family:var(--sans);font-size:12px;font-weight:500;color:var(--muted)}
 .agroup .cards{border-top:3px solid var(--ac)}
 .amuted h3.ahead{font-size:15px;color:var(--muted)}
+.mcarry{background:var(--watch-bg);color:var(--watch);border-color:transparent}
 </style>
 </head>
 <body>
@@ -1259,7 +1260,7 @@ function meetItemHtml(i, t){
     <div class="ch"><span class="cic">${catIcon(c)}</span><select class="ccat" data-mcat="${esc(i.id)}" aria-label="Category">${catOpts(c.id)}</select>${i.by === me ? `<button class="mdel" data-mdel="${esc(i.id)}" aria-label="Remove">Remove</button>` : ''}</div>
     <h3 class="ctitle" contenteditable="true" data-mtitle="${esc(i.id)}" data-ph="Add a title">${esc(i.title || '')}</h3>
     <div class="cbody">${richEdit(i.text, `<textarea class="medit" rows="1" data-medit="${esc(i.id)}" aria-label="Edit details" placeholder="Add details">${esc(i.text)}</textarea>`)}</div>
-    <div class="cfoot">${chk}${extra}${adv ? `<span class="mtag">${esc(adv.name)}</span>` : ''}</div>
+    <div class="cfoot">${chk}${extra}${adv ? `<span class="mtag">${esc(adv.name)}</span>` : ''}${i._wk && i._wk !== iso(week) ? `<span class="mtag mcarry">From week of ${esc(wkDate(i._wk))}</span>` : ''}</div>
     <div class="cby">${esc(String(i.by || '').split(' ')[0])} &middot; ${esc(when(i.at))}${i.editedBy ? ` &middot; edited by ${esc(String(i.editedBy).split(' ')[0])}` : ''}</div>
   </article>`;
 }
@@ -1286,7 +1287,7 @@ function renderMeet(){
   const wk = iso(week);
   const items = meetItems(wk);
   MTYPES.forEach(t => {
-    const list = items.filter(i => i.type === t.id);
+    const list = t.id === 'act' ? runningActions(wk) : items.filter(i => i.type === t.id);
     const n = t.tick ? list.filter(i => !i.done).length : list.length;
     document.querySelector(`.navi[data-go="${t.id}"] b`).textContent = n || '';
   });
@@ -1297,7 +1298,7 @@ function renderMeet(){
   const advOpts = '<option value="">No adviser</option>' + ADVISERS.map(a => `<option value="${key(a.name)}">${esc(a.name)}</option>`).join('');
   MTYPES.forEach(t => {
     const el = document.getElementById('view-' + t.id);
-    const list = items.filter(i => i.type === t.id).sort((x, y) => (x.done ? 1 : 0) - (y.done ? 1 : 0));
+    const list = (t.id === 'act' ? runningActions(wk) : items.filter(i => i.type === t.id)).sort((x, y) => (x.done ? 1 : 0) - (y.done ? 1 : 0));
     const d = mdrafts[t.id] || {};
     el.innerHTML = vhead(t.label, DESC[t.id]) + who +
       `<div class="madd newcard cat-${catOf(d.cat).id}" data-type="${t.id}">
@@ -1330,17 +1331,17 @@ function bindMeet(body){
     if(own) own.addEventListener('change', () => { d.owner = own.value; });
     box.querySelector('.madd-btn').onclick = () => meetAdd(type);
   });
-  body.querySelectorAll('[data-mdone]').forEach(c => c.onchange = () => meetPatch(c.dataset.mdone, {done:c.checked}));
+  body.querySelectorAll('[data-mdone]').forEach(c => c.onchange = () => meetPatch(c.dataset.mdone, {done:c.checked, doneWk:c.checked ? iso(week) : null}));
   body.querySelectorAll('[data-mdel]').forEach(b => b.onclick = () => meetDelete(b.dataset.mdel));
   body.querySelectorAll('[data-mcat]').forEach(s => s.onchange = () => { s.blur(); meetPatch(s.dataset.mcat, {cat:s.value}); });
   body.querySelectorAll('[data-mtpown]').forEach(s => s.onchange = () => { s.blur(); meetPatch(s.dataset.mtpown, {owner:s.value}); });
   body.querySelectorAll('[data-mown]').forEach(s => s.onchange = () => { s.blur(); meetPatch(s.dataset.mown, {owner:s.value}); });
-  body.querySelectorAll('[data-mtoact]').forEach(c => c.onchange = () => { if(!c.checked) return; c.blur(); const item = (meet[iso(week)] || {})[c.dataset.mtoact] || {}; meetPatch(c.dataset.mtoact, {type:'act', done:false, fromTp:true, owner:item.owner || ''}).then(() => setSave('Moved to Actions')); });
+  body.querySelectorAll('[data-mtoact]').forEach(c => c.onchange = () => { if(!c.checked) return; c.blur(); const item = meetFind(c.dataset.mtoact) || {}; meetPatch(c.dataset.mtoact, {type:'act', done:false, fromTp:true, owner:item.owner || ''}).then(() => setSave('Moved to Actions')); });
   body.querySelectorAll('[data-mtitle]').forEach(h => {
     h.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); h.blur(); } });
     h.addEventListener('paste', e => { e.preventDefault(); e.stopImmediatePropagation(); document.execCommand('insertText', false, (e.clipboardData.getData('text/plain') || '').replace(/\s+/g, ' ')); }, true);
     h.addEventListener('input', () => {
-      const wk = iso(week), id = h.dataset.mtitle, item = (meet[wk] || {})[id];
+      const id = h.dataset.mtitle, item = meetFind(id);
       if(!item) return;
       item.title = h.textContent.trim();
       setSave('Saving...');
@@ -1348,7 +1349,7 @@ function bindMeet(body){
       rTimers['t' + id] = setTimeout(() => meetPatch(id, {title:item.title, editedBy:me || '', editedAt:new Date().toISOString()}), 700);
     });
   });
-  body.querySelectorAll('[data-medit]').forEach(ta => { fit(ta); ta.addEventListener('input', () => { fit(ta); const wk = iso(week), id = ta.dataset.medit, item = (meet[wk] || {})[id]; if(!item) return; item.text = valOf(ta); setSave('Saving...'); clearTimeout(rTimers['m' + id]); rTimers['m' + id] = setTimeout(() => { if(!textOf(valOf(ta)).trim() && !item.title) return; meetPatch(id, {text:valOf(ta), editedBy:me || '', editedAt:new Date().toISOString()}); }, 700); }); });
+  body.querySelectorAll('[data-medit]').forEach(ta => { fit(ta); ta.addEventListener('input', () => { fit(ta); const id = ta.dataset.medit, item = meetFind(id); if(!item) return; item.text = valOf(ta); setSave('Saving...'); clearTimeout(rTimers['m' + id]); rTimers['m' + id] = setTimeout(() => { if(!textOf(valOf(ta)).trim() && !item.title) return; meetPatch(id, {text:valOf(ta), editedBy:me || '', editedAt:new Date().toISOString()}); }, 700); }); });
 }
 async function meetAdd(type){
   const wk = iso(week), d = mdrafts[type] || {};
@@ -1369,8 +1370,15 @@ async function meetAdd(type){
     render();
   }catch(e){ setSave('Not added', true); }
 }
+function meetWeekOf(id){ return Object.keys(meet).find(w => meet[w] && meet[w][id]) || iso(week); }
+function meetFind(id){ return (meet[meetWeekOf(id)] || {})[id]; }
+function runningActions(wk){
+  const out = [];
+  Object.keys(meet).filter(w => w <= wk).forEach(w => Object.entries(meet[w] || {}).forEach(([id, v]) => { if(v && v.type === 'act' && (!v.done || w === wk || v.doneWk === wk)) out.push(Object.assign({id, _wk:w}, v)); }));
+  return out.sort((x, y) => String(x.at).localeCompare(String(y.at)));
+}
 async function meetPatch(id, patch){
-  const wk = iso(week);
+  const wk = meetWeekOf(id);
   try{
     const r = await fetch(`${DBM}/${wk}/${id}.json`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(patch)});
     if(!r.ok) throw new Error(r.status);
@@ -1380,7 +1388,7 @@ async function meetPatch(id, patch){
   }catch(e){ setSave('Not saved', true); }
 }
 async function meetDelete(id){
-  const wk = iso(week);
+  const wk = meetWeekOf(id);
   try{
     const r = await fetch(`${DBM}/${wk}/${id}.json`, {method:'DELETE'});
     if(!r.ok) throw new Error(r.status);
