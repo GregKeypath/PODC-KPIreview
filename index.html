@@ -507,6 +507,11 @@ h1:hover .lt{animation:wave .6s ease-in-out;animation-delay:calc(var(--i) * 40ms
 .agroup .cards{border-top:3px solid var(--ac)}
 .amuted h3.ahead{font-size:15px;color:var(--muted)}
 .mcarry{background:var(--watch-bg);color:var(--watch);border-color:transparent}
+.madded{background:var(--panel);border:1px solid var(--line);color:var(--ink);font-weight:600}
+.mdoneat{background:var(--ok-bg);color:var(--ok);border-color:transparent;font-weight:600}
+details.adone{margin-top:22px}
+details.adone summary{cursor:pointer;font-family:var(--display);font-size:16px;font-weight:700;color:var(--muted);padding:6px 0}
+details.adone .cards{margin-top:8px}
 </style>
 </head>
 <body>
@@ -1260,34 +1265,36 @@ function meetItemHtml(i, t){
     <div class="ch"><span class="cic">${catIcon(c)}</span><select class="ccat" data-mcat="${esc(i.id)}" aria-label="Category">${catOpts(c.id)}</select>${i.by === me ? `<button class="mdel" data-mdel="${esc(i.id)}" aria-label="Remove">Remove</button>` : ''}</div>
     <h3 class="ctitle" contenteditable="true" data-mtitle="${esc(i.id)}" data-ph="Add a title">${esc(i.title || '')}</h3>
     <div class="cbody">${richEdit(i.text, `<textarea class="medit" rows="1" data-medit="${esc(i.id)}" aria-label="Edit details" placeholder="Add details">${esc(i.text)}</textarea>`)}</div>
-    <div class="cfoot">${chk}${extra}${adv ? `<span class="mtag">${esc(adv.name)}</span>` : ''}${i._wk && i._wk !== iso(week) ? `<span class="mtag mcarry">From week of ${esc(wkDate(i._wk))}</span>` : ''}</div>
+    <div class="cfoot">${chk}${extra}${adv ? `<span class="mtag">${esc(adv.name)}</span>` : ''}${t.id === 'act' ? `<span class="mtag madded">Added ${esc(dayDate(i.at))}</span>${i.done && i.doneAt ? `<span class="mtag mdoneat">Done ${esc(dayDate(i.doneAt))}</span>` : ''}` : ''}</div>
     <div class="cby">${esc(String(i.by || '').split(' ')[0])} &middot; ${esc(when(i.at))}${i.editedBy ? ` &middot; edited by ${esc(String(i.editedBy).split(' ')[0])}` : ''}</div>
   </article>`;
 }
 const DESC = {
   tp:'Things either of us wants to raise or ask.',
-  act:'Agreed actions, each with an owner.',
+  act:'One running list of our actions. It stays the same whichever week you are on; tick Done when finished.',
   mn:'Notes from the catch-up.',
   risk:'Presented on Friday, with last week underneath for comparison. Type - and a space for dot points, or paste a table from Excel.'
 };
 let view = 'tp';
 try{ const v = localStorage.getItem('podc_view'); if(v && document.querySelector(`[data-view="${v}"]`)) view = v; }catch(e){}
-function vhead(title, d){ return `<div class="vhead"><h2>${title}</h2><p>${d} <span class="vweek">Week of ${esc(fmt(week))}</span></p></div>`; }
-function actSections(list, t){
+function vhead(title, d, noWeek){ return `<div class="vhead"><h2>${title}</h2><p>${d}${noWeek ? '' : ` <span class="vweek">Week of ${esc(fmt(week))}</span>`}</p></div>`; }
+function dayDate(s){ const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString('en-AU', {day:'numeric', month:'short'}); }
+function actSections(all, t){
+  const list = all.filter(i => !i.done), done = all.filter(i => i.done);
   const groups = MANAGERS.map(m => ({label:m.name === 'Greg Banks' ? 'Greg’s actions' : 'Carms’ actions', colour:m.colour, items:list.filter(i => i.owner === m.name)}));
   const none = list.filter(i => !MANAGERS.some(m => m.name === i.owner));
   if(none.length) groups.push({label:'No owner yet', colour:'var(--faint)', items:none, muted:true});
   return groups.map(g => {
     const open = g.items.filter(i => !i.done).length;
-    return `<section class="agroup ${g.muted ? 'amuted' : ''}" style="--ac:${g.colour}"><h3 class="ahead"><span class="adot"></span>${g.label}<span class="acount">${open} open${g.items.length > open ? `, ${g.items.length - open} done` : ''}</span></h3>
-      <div class="cards">${g.items.length ? g.items.map(i => meetItemHtml(i, t)).join('') : '<div class="mempty">No actions this week</div>'}</div></section>`;
-  }).join('');
+    return `<section class="agroup ${g.muted ? 'amuted' : ''}" style="--ac:${g.colour}"><h3 class="ahead"><span class="adot"></span>${g.label}<span class="acount">${open} open</span></h3>
+      <div class="cards">${g.items.length ? g.items.map(i => meetItemHtml(i, t)).join('') : '<div class="mempty">Nothing open</div>'}</div></section>`;
+  }).join('') + (done.length ? `<details class="adone"><summary>Completed (${done.length})</summary><div class="cards">${done.slice().sort((x, y) => String(y.at).localeCompare(String(x.at))).map(i => meetItemHtml(i, t)).join('')}</div></details>` : '');
 }
 function renderMeet(){
   const wk = iso(week);
   const items = meetItems(wk);
   MTYPES.forEach(t => {
-    const list = t.id === 'act' ? runningActions(wk) : items.filter(i => i.type === t.id);
+    const list = t.id === 'act' ? runningActions() : items.filter(i => i.type === t.id);
     const n = t.tick ? list.filter(i => !i.done).length : list.length;
     document.querySelector(`.navi[data-go="${t.id}"] b`).textContent = n || '';
   });
@@ -1298,9 +1305,9 @@ function renderMeet(){
   const advOpts = '<option value="">No adviser</option>' + ADVISERS.map(a => `<option value="${key(a.name)}">${esc(a.name)}</option>`).join('');
   MTYPES.forEach(t => {
     const el = document.getElementById('view-' + t.id);
-    const list = (t.id === 'act' ? runningActions(wk) : items.filter(i => i.type === t.id)).sort((x, y) => (x.done ? 1 : 0) - (y.done ? 1 : 0));
+    const list = (t.id === 'act' ? runningActions() : items.filter(i => i.type === t.id)).sort((x, y) => (x.done ? 1 : 0) - (y.done ? 1 : 0));
     const d = mdrafts[t.id] || {};
-    el.innerHTML = vhead(t.label, DESC[t.id]) + who +
+    el.innerHTML = vhead(t.label, DESC[t.id], t.id === 'act') + who +
       `<div class="madd newcard cat-${catOf(d.cat).id}" data-type="${t.id}">
         <div class="nrow"><span class="cic">${catIcon(catOf(d.cat))}</span><select class="mcat" aria-label="Category">${catOpts(catOf(d.cat).id)}</select><input class="ntitle" type="text" placeholder="Title, e.g. SP6 final numbers" value="${esc(d.title || '')}"></div>
         <textarea rows="2" class="mnew" placeholder="Details (optional). Type - and a space for dot points.">${esc(d.text || '')}</textarea>
@@ -1331,7 +1338,7 @@ function bindMeet(body){
     if(own) own.addEventListener('change', () => { d.owner = own.value; });
     box.querySelector('.madd-btn').onclick = () => meetAdd(type);
   });
-  body.querySelectorAll('[data-mdone]').forEach(c => c.onchange = () => meetPatch(c.dataset.mdone, {done:c.checked, doneWk:c.checked ? iso(week) : null}));
+  body.querySelectorAll('[data-mdone]').forEach(c => c.onchange = () => meetPatch(c.dataset.mdone, {done:c.checked, doneWk:c.checked ? iso(week) : null, doneAt:c.checked ? new Date().toISOString() : null}));
   body.querySelectorAll('[data-mdel]').forEach(b => b.onclick = () => meetDelete(b.dataset.mdel));
   body.querySelectorAll('[data-mcat]').forEach(s => s.onchange = () => { s.blur(); meetPatch(s.dataset.mcat, {cat:s.value}); });
   body.querySelectorAll('[data-mtpown]').forEach(s => s.onchange = () => { s.blur(); meetPatch(s.dataset.mtpown, {owner:s.value}); });
@@ -1374,7 +1381,7 @@ function meetWeekOf(id){ return Object.keys(meet).find(w => meet[w] && meet[w][i
 function meetFind(id){ return (meet[meetWeekOf(id)] || {})[id]; }
 function runningActions(wk){
   const out = [];
-  Object.keys(meet).filter(w => w <= wk).forEach(w => Object.entries(meet[w] || {}).forEach(([id, v]) => { if(v && v.type === 'act' && (!v.done || w === wk || v.doneWk === wk)) out.push(Object.assign({id, _wk:w}, v)); }));
+  Object.keys(meet).forEach(w => Object.entries(meet[w] || {}).forEach(([id, v]) => { if(v && v.type === 'act') out.push(Object.assign({id, _wk:w}, v)); }));
   return out.sort((x, y) => String(x.at).localeCompare(String(y.at)));
 }
 async function meetPatch(id, patch){
