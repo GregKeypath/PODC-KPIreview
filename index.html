@@ -124,6 +124,9 @@ select:hover{background:var(--fieldhover)}
 .t-watch{background:var(--watch-bg)!important;color:var(--watch)}
 .t-ok{background:var(--ok-bg)!important;color:var(--ok)}
 .t-exc{background:var(--exc-bg)!important;color:var(--exc)}
+.t-tlred{background:var(--flag-bg)!important;color:var(--flag);font-weight:600}
+.t-tlamber{background:var(--watch-bg)!important;color:var(--watch);font-weight:600}
+.t-tlgreen{background:var(--ok-bg)!important;color:var(--ok);font-weight:600}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;background:var(--pb);color:var(--pt)}
 .pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .pill.flag{--pb:var(--flag-bg);--pt:var(--flag)}.pill.watch{--pb:var(--watch-bg);--pt:var(--watch)}.pill.ok{--pb:var(--ok-bg);--pt:var(--ok)}
@@ -803,7 +806,7 @@ function rate(r){ const a = num(r.attempts), u = num(r.unique); return a && u !=
 function rateCls(r){ const v = rate(r); return v === null ? '' : v < MIN_CONTACT ? 't-watch' : 't-ok'; }
 const KPI = {
   att:{label:'60-Day Attempted', floor:80, ceil:90},
-  con:{label:'60-Day Contacted', floor:45, ceil:Infinity},
+  con:{label:'60-Day Unique Contact', floor:45, ceil:55},
   t12:{label:'T1 to T2', floor:75, ceil:85}
 };
 
@@ -908,7 +911,7 @@ function cmts(wk, k){ return ((comments[wk] || {})[k] || []).slice().sort((x, y)
 
 function hasData(r){ return ['days','attempts','vcita','unique','att','con','t12','sts','notes'].some(k => r[k] !== undefined && r[k] !== '' && r[k] !== null); }
 
-function tier(k, v){ if(v === null) return ''; const t = KPI[k]; return v < t.floor ? 'watch' : v > t.ceil ? 'exc' : 'ok'; }
+function tier(k, v){ if(v === null) return ''; const t = KPI[k]; return v < t.floor ? 'tlred' : v > t.ceil ? 'tlgreen' : 'tlamber'; }
 
 function entryOf(p1, p2){
   if(p1 === 'flag') return {s:'flag', why:'flag'};
@@ -1001,7 +1004,7 @@ const HEAD = p => `<thead><tr class="grp">
   <th>Unique<small>contacts</small></th>
   <th>Contact rate<small>min 45%</small></th>
   <th>Attempted<small>60-day, min 80%</small></th>
-  <th>Contacted<small>60-day, min 45%</small></th>
+  <th>Unique contact<small>60-day, min 45%</small></th>
   <th>T1 to T2<small>min 75%</small></th>
   <th>Status</th>
   <th>Success plan</th>
