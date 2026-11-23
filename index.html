@@ -585,8 +585,8 @@ details.adone .cards{margin-top:8px}
   <div id="partners" style="display:grid;gap:34px"></div>
 
   <div class="legend">
-    <span><i class="sw" style="background:var(--ok)"></i>On track: meets call attempts (or STS of 7.6 a day, 6 for MBS) or vCITA, and all three 60-day KPIs</span>
-    <span><i class="sw" style="background:var(--watch)"></i>Watch: below on both call attempts and vCITA, or below on any 60-day KPI; carries into the next week until figures are entered</span>
+    <span><i class="sw" style="background:var(--ok)"></i>On track: meets call attempts (or STS of 7.6 a day, 6 for MBS) or vCITA, and 60-day Attempted and Unique contact</span>
+    <span><i class="sw" style="background:var(--watch)"></i>Watch: below on both call attempts and vCITA, or below on 60-day Attempted or Unique contact (T1 to T2 is colour only); carries into the next week until figures are entered</span>
     <span><i class="sw" style="background:var(--flag)"></i>Flag: two weeks in a row on Watch; stays until a week meets everything</span>
     <span><i class="sw" style="background:var(--ovr)"></i>Override: takes them off Needs attention only; their status still counts</span>
     <span><i class="sw" style="background:var(--faint)"></i>Contact rate is for information only</span>
@@ -599,6 +599,9 @@ details.adone .cards{margin-top:8px}
 <script>
 const ROOT = 'https://unsw-team-calendar-default-rtdb.asia-southeast1.firebasedatabase.app';
 const DB = ROOT + '/weekly_kpi', DBC = ROOT + '/weekly_kpi_comments';
+let lastWrite = 0, dataSig = null;
+const _fetch = window.fetch.bind(window);
+window.fetch = (u, o) => { if(o && o.method && o.method !== 'GET' && String(u).indexOf(ROOT) === 0) lastWrite = Date.now(); return _fetch(u, o); };
 const DBM = ROOT + '/weekly_1on1';
 const MTYPES = [
   {id:'tp', label:'Talking points', one:'Talking point', add:'Add a talking point or question', tick:'Resolved'},
@@ -912,6 +915,9 @@ async function load(quiet){
     meet = (await m.json()) || {};
     risk = (await rk.json()) || {};
     park = (await pk.json()) || {};
+    const sig = JSON.stringify([next, raw, meet, risk, park]);
+    if(quiet && dataSig !== null && sig !== dataSig && Date.now() - lastWrite > 90000 && window.hqUpdated) window.hqUpdated();
+    dataSig = sig;
     if(!quiet) setSave('');
   }catch(e){ setSave('Could not load', true); }
   refresh();
@@ -982,7 +988,7 @@ function baseOf(r, adv){
     const shortCalls = a !== null && a < t.att * days && !stsCovers(r, adv), shortV = v !== null && v < t.vc * days;
     if(shortCalls && shortV){ reasons.watch.push(`Call attempts ${a} of ${t.att * days} expected (${days} days)`); reasons.watch.push(`vCITA calls ${v} of ${t.vc * days} expected (${days} days)`); }
   }
-  ['att','con','t12'].forEach(k => { const v = num(r[k]); if(v !== null && v < KPI[k].floor) reasons.watch.push(`${KPI[k].label} ${v}% (below ${KPI[k].floor}%)`); });
+  ['att','con'].forEach(k => { const v = num(r[k]); if(v !== null && v < KPI[k].floor) reasons.watch.push(`${KPI[k].label} ${v}% (below ${KPI[k].floor}%)`); });
   const missing = days === null || num(r.attempts) === null || num(r.vcita) === null;
   const base = reasons.watch.length ? 'watch' : missing ? 'part' : 'ok';
   return {base, reasons};
@@ -1279,7 +1285,7 @@ function meetItemHtml(i, t){
     <div class="ch"><span class="cic">${catIcon(c)}</span><select class="ccat" data-mcat="${esc(i.id)}" aria-label="Category">${catOpts(c.id)}</select>${i.by === me ? `<button class="mdel" data-mdel="${esc(i.id)}" aria-label="Remove">Remove</button>` : ''}</div>
     <h3 class="ctitle" contenteditable="true" data-mtitle="${esc(i.id)}" data-ph="Add a title">${esc(i.title || '')}</h3>
     <div class="cbody">${richEdit(i.text, `<textarea class="medit" rows="1" data-medit="${esc(i.id)}" aria-label="Edit details" placeholder="Add details">${esc(i.text)}</textarea>`)}</div>
-    <div class="cfoot">${chk}${extra}${adv ? `<span class="mtag">${esc(adv.name)}</span>` : ''}${t.id === 'act' ? `<span class="mtag madded">Added ${esc(dayDate(i.at))}</span>${i.done && i.doneAt ? `<span class="mtag mdoneat">Done ${esc(dayDate(i.doneAt))}</span>` : ''}` : ''}</div>
+    <div class="cfoot">${chk}${extra}${adv ? `<span class="mtag">${esc(adv.name)}</span>` : ''}${t.id === 'act' ? `<span class="mtag madded">Added ${esc(dayDate(i.at))}</span>${i.done && i.doneAt ? `<span class="mtag mdoneat">Done ${esc(dayDate(i.doneAt))}</span>` : ''}` : ''}${t.id === 'tp' && i._wk && i._wk !== iso(week) ? `<span class="mtag mcarry">From week of ${esc(wkDate(i._wk))}</span>` : ''}</div>
     <div class="cby">${esc(String(i.by || '').split(' ')[0])} &middot; ${esc(when(i.at))}${i.editedBy ? ` &middot; edited by ${esc(String(i.editedBy).split(' ')[0])}` : ''}</div>
   </article>`;
 }
@@ -1308,7 +1314,7 @@ function renderMeet(){
   const wk = iso(week);
   const items = meetItems(wk);
   MTYPES.forEach(t => {
-    const list = t.id === 'act' ? runningActions() : items.filter(i => i.type === t.id);
+    const list = t.id === 'act' ? runningActions() : t.id === 'tp' ? runningTalking(wk) : items.filter(i => i.type === t.id);
     const n = t.tick ? list.filter(i => !i.done).length : list.length;
     document.querySelector(`.navi[data-go="${t.id}"] b`).textContent = n || '';
   });
@@ -1319,7 +1325,7 @@ function renderMeet(){
   const advOpts = '<option value="">No adviser</option>' + ADVISERS.map(a => `<option value="${key(a.name)}">${esc(a.name)}</option>`).join('');
   MTYPES.forEach(t => {
     const el = document.getElementById('view-' + t.id);
-    const list = (t.id === 'act' ? runningActions() : items.filter(i => i.type === t.id)).sort((x, y) => (x.done ? 1 : 0) - (y.done ? 1 : 0));
+    const list = (t.id === 'act' ? runningActions() : t.id === 'tp' ? runningTalking(wk) : items.filter(i => i.type === t.id)).sort((x, y) => (x.done ? 1 : 0) - (y.done ? 1 : 0));
     const d = mdrafts[t.id] || {};
     el.innerHTML = vhead(t.label, DESC[t.id], t.id === 'act') + who +
       `<div class="madd newcard cat-${catOf(d.cat).id}" data-type="${t.id}">
@@ -1393,6 +1399,11 @@ async function meetAdd(type){
 }
 function meetWeekOf(id){ return Object.keys(meet).find(w => meet[w] && meet[w][id]) || iso(week); }
 function meetFind(id){ return (meet[meetWeekOf(id)] || {})[id]; }
+function runningTalking(wk){
+  const out = [];
+  Object.keys(meet).filter(w => w <= wk).forEach(w => Object.entries(meet[w] || {}).forEach(([id, v]) => { if(v && v.type === 'tp' && (w === wk || !v.done || v.doneWk === wk)) out.push(Object.assign({id, _wk:w}, v)); }));
+  return out.sort((x, y) => String(x.at).localeCompare(String(y.at)));
+}
 function runningActions(wk){
   const out = [];
   Object.keys(meet).forEach(w => Object.entries(meet[w] || {}).forEach(([id, v]) => { if(v && v.type === 'act') out.push(Object.assign({id, _wk:w}, v)); }));
@@ -1571,6 +1582,7 @@ setView(view);
     document.body.appendChild(box);
     box.querySelector('.updgo').onclick = () => { location.href = location.origin + location.pathname + '?v=' + Date.now() + location.hash; };
   };
+  window.hqUpdated = () => { if(!shown){ shown = true; showUpdate(); } };
   check();
   setInterval(() => { if(document.visibilityState === 'visible') check(); }, 120000);
   document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') check(); });
