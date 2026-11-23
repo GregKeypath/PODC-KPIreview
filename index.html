@@ -112,6 +112,9 @@ td.name{font-weight:600}
 .f .of.short{color:var(--watch);font-weight:500}
 .f .pct{font-size:12px;color:var(--faint)}
 .dl{display:block;font-family:var(--mono);font-size:10.5px;line-height:1;margin-top:3px;padding-left:2px;font-variant-numeric:tabular-nums}
+.dl i{font-style:normal;font-family:var(--sans);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);margin-right:4px}
+.dl.dt{margin-top:4px}
+.dl.dw{margin-top:2px}
 .dl.up{color:var(--ok)}.dl.down{color:var(--flag)}.dl.same{color:var(--faint)}
 .f.rate{padding:6px 10px;border-radius:8px;background:var(--field);min-width:62px;justify-content:flex-end;font-weight:500}
 input.num{width:58px;background:var(--field);border:1px solid transparent;border-radius:8px;padding:6px 8px;font-family:var(--mono);font-variant-numeric:tabular-nums;transition:background .12s}
@@ -1040,6 +1043,12 @@ function rowHtml(a, k, r, res, st, wk, i){
   const prev = rec(iso(addDays(week, -7)), a);
   const dshow = (c, p) => { if(c === null || p === null) return ''; const d = Math.round((c - p) * 10) / 10; return `<span class="dl ${d > 0 ? 'up' : d < 0 ? 'down' : 'same'}">${d > 0 ? '+' + d : d === 0 ? '±0' : String(d).replace('-', '&minus;')}</span>`; };
   const dl = f => dshow(num(r[f]), num(prev[f]));
+  const covered = stsCovers(r, a);
+  const actCls = (v, exp, cov) => { if(v === null || exp === null) return ''; if(cov || v >= exp) return 't-tlgreen'; return exp - v <= 5 ? 't-tlamber' : 't-tlred'; };
+  const sgn = d => d > 0 ? '+' + d : d === 0 ? '±0' : String(d).replace('-', '&minus;');
+  const tgtLine = (c, target, cov) => { if(c === null || target === null) return ''; const d = Math.round((c - target) * 10) / 10; if(cov && d < 0) return '<span class="dl dt up"><i>Target</i>STS ✓</span>'; return `<span class="dl dt ${d >= 0 ? 'up' : 'down'}"><i>Target</i>${sgn(d)}</span>`; };
+  const wkl = (c, p) => { if(c === null || p === null) return ''; const d = Math.round((c - p) * 10) / 10; return `<span class="dl dw ${d > 0 ? 'up' : d < 0 ? 'down' : 'same'}"><i>Last wk</i>${sgn(d)}</span>`; };
+  const wk2 = f => wkl(num(r[f]), num(prev[f]));
   const canOv = status === 'flag' || status === 'watch' || !!r.override;
   const sub = statusNote(res);
   const needReason = false;
@@ -1047,13 +1056,13 @@ function rowHtml(a, k, r, res, st, wk, i){
   const open = openC.has(k);
   let html = `<tr class="main${alt}" data-row="${k}">
     <td class="name">${esc(a.name)}</td>
-    <td><span class="f"><input class="num days" type="text" inputmode="decimal" autocomplete="off" data-f="days" value="${esc(r.days)}"></span>${dl('days')}</td>
-    <td><span class="f"><input class="num" type="text" inputmode="numeric" autocomplete="off" data-f="attempts" value="${esc(r.attempts)}"><span class="of ${shortA ? 'short' : ''}">${expA !== null ? '/ ' + expA : ''}</span></span>${dl('attempts')}</td>
-    <td><span class="f"><input class="num" type="text" inputmode="numeric" autocomplete="off" data-f="vcita" value="${esc(r.vcita)}"><span class="of ${shortV ? 'short' : ''}">${expV !== null ? '/ ' + expV : ''}</span></span>${dl('vcita')}</td>
-    <td><span class="f"><input class="num" type="text" inputmode="numeric" autocomplete="off" data-f="sts" value="${esc(r.sts)}"></span>${dl('sts')}</td>
-    <td><span class="f"><input class="num" type="text" inputmode="numeric" autocomplete="off" data-f="unique" value="${esc(r.unique)}"></span>${dl('unique')}</td>
-    <td><span class="f rate ${rateCls(r)}">${rate(r) === null ? '<span class="pct">n/a</span>' : rate(r) + '<span class="pct">%</span>'}</span>${dshow(rate(r), rate(prev))}</td>
-    <td>${kpi('att')}${dl('att')}</td><td>${kpi('con')}${dl('con')}</td><td>${kpi('t12')}${dl('t12')}</td>
+    <td><span class="f"><input class="num days" type="text" inputmode="decimal" autocomplete="off" data-f="days" value="${esc(r.days)}"></span>${wk2('days')}</td>
+    <td><span class="f"><input class="num ${actCls(num(r.attempts), expA, covered)}" type="text" inputmode="numeric" autocomplete="off" data-f="attempts" value="${esc(r.attempts)}"><span class="of ${shortA ? 'short' : ''}">${expA !== null ? '/ ' + expA : ''}</span></span>${tgtLine(num(r.attempts), expA, covered)}${wk2('attempts')}</td>
+    <td><span class="f"><input class="num ${actCls(num(r.vcita), expV, false)}" type="text" inputmode="numeric" autocomplete="off" data-f="vcita" value="${esc(r.vcita)}"><span class="of ${shortV ? 'short' : ''}">${expV !== null ? '/ ' + expV : ''}</span></span>${tgtLine(num(r.vcita), expV, false)}${wk2('vcita')}</td>
+    <td><span class="f"><input class="num" type="text" inputmode="numeric" autocomplete="off" data-f="sts" value="${esc(r.sts)}"></span>${wk2('sts')}</td>
+    <td><span class="f"><input class="num" type="text" inputmode="numeric" autocomplete="off" data-f="unique" value="${esc(r.unique)}"></span>${wk2('unique')}</td>
+    <td><span class="f rate ${rateCls(r)}">${rate(r) === null ? '<span class="pct">n/a</span>' : rate(r) + '<span class="pct">%</span>'}</span>${wkl(rate(r), rate(prev))}</td>
+    <td>${kpi('att')}${tgtLine(num(r.att), KPI.att.floor)}${wk2('att')}</td><td>${kpi('con')}${tgtLine(num(r.con), KPI.con.floor)}${wk2('con')}</td><td>${kpi('t12')}${tgtLine(num(r.t12), KPI.t12.floor)}${wk2('t12')}</td>
     <td><span class="pill ${status}">${LABEL[status]}</span>${sub ? `<span class="streak">${sub}</span>` : ''}</td>
     <td><label class="planbox"><input type="checkbox" data-f="plan" ${r.plan ? 'checked' : ''}> Needed</label></td>
   </tr>
